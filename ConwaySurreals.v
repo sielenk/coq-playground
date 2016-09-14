@@ -79,7 +79,7 @@ Proof.
   destruct H1.
 Qed.
 
-Lemma nOneLessThanZero: lt n_one_ zero_.
+Lemma nOneLtZero: lt n_one_ zero_.
 Proof.
   intros H1.
   rewrite leRec in H1.
@@ -91,7 +91,7 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma pOneLessThanZero: gt p_one_ zero_.
+Lemma pOneGtZero: gt p_one_ zero_.
 Proof.
   intros H1.
   rewrite leRec in H1.
@@ -101,6 +101,19 @@ Proof.
   unfold p_one_.
   rewrite <- mkNumL.
   reflexivity.
+Qed.
+
+Lemma nOneLenOne: le n_one_ n_one_.
+Proof.
+  rewrite leRec.
+  split.
+  unfold liftL, n_one_, lt, not.
+  rewrite <- mkNumL.
+  intros _ [].
+  unfold liftR, n_one_, lt, not.
+  rewrite <- mkNumR.
+  intros _ [].
+  apply nOneLtZero.
 Qed.
 
 Definition zero: num := exist _ zero_ zeroIsNumber.

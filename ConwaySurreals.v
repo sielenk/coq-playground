@@ -33,6 +33,8 @@ Definition ge m n :=  le n m.
 Definition lt m n := ~le n m.
 Definition gt m n := ~le m n.
 
+Definition like m n := le m n /\ le n m.
+
 Axiom leRec: forall m n, le m n <-> liftL lt (L m) n /\ liftR lt m (R n).
 
 Definition isNumber n := lift lt (L n) (R n).
@@ -89,6 +91,18 @@ Proof.
   reflexivity.
 Qed.
 
-Definition zero: num := exist _ zero_ zeroIsNumber.
+Lemma pOneLessThanZero: gt p_one_ zero_.
+Proof.
+  intros H1.
+  rewrite leRec in H1.
+  destruct H1 as [H1 H2].
+  unfold liftL, zero_, lt, not in H1.
+  apply (H1 zero_); try apply zeroLeZero.
+  unfold p_one_.
+  rewrite <- mkNumL.
+  reflexivity.
+Qed.
 
-f
+Definition zero: num := exist _ zero_ zeroIsNumber.
+Definition nOne: num := exist _ n_one_ nOneIsNumber.
+Definition pOne: num := exist _ p_one_ pOneIsNumber.

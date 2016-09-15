@@ -13,11 +13,17 @@ Axiom embed: preNum -> U.
 Axiom embedInjective: forall n1 n2, embed n1 = embed n2 -> n1 = n2.
 
 
-Definition liftL(R: preNum -> preNum -> Prop)(l: set)(r: preNum): Prop :=
+Definition liftLa(R: preNum -> preNum -> Prop)(l: set)(r: preNum): Prop :=
   forall ul, l (embed ul) -> R ul r.
 
-Definition liftR(R: preNum -> preNum -> Prop)(l: preNum)(r: set): Prop :=
+Definition liftLe(R: preNum -> preNum -> Prop)(l: set)(r: preNum): Prop :=
+  exists ul, l (embed ul) -> R ul r.
+
+Definition liftRa(R: preNum -> preNum -> Prop)(l: preNum)(r: set): Prop :=
   forall ur, r (embed ur) -> R l ur.
+
+Definition liftRe(R: preNum -> preNum -> Prop)(l: preNum)(r: set): Prop :=
+  exists ur, r (embed ur) -> R l ur.
 
 Definition lift(R: preNum -> preNum -> Prop)(l: set)(r: set): Prop :=
   forall ul ur, l (embed ul) -> r (embed ur) -> R ul ur.
@@ -27,14 +33,13 @@ Definition zero_      := mkPreNum empty empty.
 Definition n_one_     := mkPreNum empty (eq (embed zero_)).
 Definition p_one_     := mkPreNum (eq (embed zero_)) empty.
 
-Axiom      le: preNum -> preNum -> Prop.
-Definition ge m n :=  le n m.
-Definition lt m n := ~le n m.
-Definition gt m n := ~le m n.
+Inductive le m n : Prop := Le: liftLa lt (L m) n -> liftRa lt m (R n) -> le m n
+with      lt m n : Prop := Lt: liftLe le (L m) n -> liftRe le m (R n) -> lt m n.
+
+Definition ge m n := le n m.
+Definition gt m n := lt n m.
 
 Definition like m n := le m n /\ le n m.
-
-Axiom leRec: forall m n, le m n <-> liftL lt (L m) n /\ liftR lt m (R n).
 
 Definition isNumber n := lift lt (L n) (R n).
 
@@ -57,38 +62,44 @@ Qed.
 
 Lemma zeroLeZero: le zero_ zero_.
 Proof.
-  rewrite leRec.
-  split; intros _ [].
+  apply Le; intros _ [].
+Qed.
+
+Lemma nOneLeZero: le n_one_ zero_.
+Proof.
+  apply Le; intros n [].
 Qed.
 
 Lemma nOneLtZero: lt n_one_ zero_.
 Proof.
-  intros H1.
-  rewrite leRec in H1.
-  destruct H1 as [H1 H2].
-  apply (H2 zero_); try apply zeroLeZero.
-  reflexivity.
+  apply Lt.
+  exists zero_.
+  intros _.
+  apply zeroLeZero.
+  exists zero_.
+  intros _.
+  apply nOneLeZero.
+Qed.
+
+Lemma pOneGeZero: ge p_one_ zero_.
+Proof.
+  apply Le; intros n [].
 Qed.
 
 Lemma pOneGtZero: gt p_one_ zero_.
 Proof.
-  intros H1.
-  rewrite leRec in H1.
-  destruct H1 as [H1 H2].
-  apply (H1 zero_); try apply zeroLeZero.
-  reflexivity.
+  apply Lt; exists zero_; intros _.
+  apply pOneGeZero.
+  apply zeroLeZero.
 Qed.
 
 Lemma nOneLenOne: le n_one_ n_one_.
 Proof.
-  rewrite leRec.
-  split.
-  intros _ [].
-  intros x H1 H2. simpl in H1.
-  apply embedInjective in H1.
-  destruct H1.
+  apply Le; intros n H.
+  destruct H.
+  apply embedInjective in H.
+  destruct H.
   apply nOneLtZero.
-  assumption.
 Qed.
 
 Definition zero: num := exist _ zero_  zeroIsNumber.

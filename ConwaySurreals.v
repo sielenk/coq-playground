@@ -33,8 +33,8 @@ Definition zero_      := mkPreNum empty empty.
 Definition n_one_     := mkPreNum empty (eq (embed zero_)).
 Definition p_one_     := mkPreNum (eq (embed zero_)) empty.
 
-Inductive le m n : Prop := Le: liftLa lt (L m) n -> liftRa lt m (R n) -> le m n
-with      lt m n : Prop := Lt: liftLe le (L m) n -> liftRe le m (R n) -> lt m n.
+Inductive le m n : Prop := Le: liftLa lt (L m) n /\ liftRa lt m (R n) -> le m n
+with      lt m n : Prop := Lt: liftLe le (L m) n \/ liftRe le m (R n) -> lt m n.
 
 Definition ge m n := le n m.
 Definition gt m n := lt n m.
@@ -62,40 +62,40 @@ Qed.
 
 Lemma zeroLeZero: le zero_ zero_.
 Proof.
-  apply Le; intros _ [].
+  apply Le; split; intros _ [].
 Qed.
 
 Lemma nOneLeZero: le n_one_ zero_.
 Proof.
-  apply Le; intros n [].
+  apply Le; split; intros n [].
 Qed.
 
 Lemma nOneLtZero: lt n_one_ zero_.
 Proof.
   apply Lt.
+  left.
   exists zero_.
   intros _.
   apply zeroLeZero.
-  exists zero_.
-  intros _.
-  apply nOneLeZero.
 Qed.
 
 Lemma pOneGeZero: ge p_one_ zero_.
 Proof.
-  apply Le; intros n [].
+  apply Le; split; intros n [].
 Qed.
 
 Lemma pOneGtZero: gt p_one_ zero_.
 Proof.
-  apply Lt; exists zero_; intros _.
+  apply Lt.
+  left.
+  exists zero_.
+  intros _.
   apply pOneGeZero.
-  apply zeroLeZero.
 Qed.
 
 Lemma nOneLenOne: le n_one_ n_one_.
 Proof.
-  apply Le; intros n H.
+  apply Le; split; intros n H.
   destruct H.
   apply embedInjective in H.
   destruct H.

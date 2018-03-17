@@ -168,6 +168,33 @@ Proof.
   symmetry. apply (leftUnit g).
 Qed.
 
+Lemma inverseId(g: Group): forall x: g, invert (invert x) = x.
+Proof.
+  intros x.
+  symmetry.
+  apply (inverseUnique g).
+  apply (leftInverse g).
+Qed.
+
+Lemma inverseUnit(g: Group): @invert g unit = unit.
+Proof.
+  symmetry.
+  apply (inverseUnique g).
+  apply (leftUnit g).
+Qed.
+
+Lemma inverseOp(g: Group): forall a b: g, invert (op a b) = op (invert b) (invert a).
+Proof.
+  intros a b.
+  symmetry.
+  apply (inverseUnique g).
+  rewrite (associative g).
+  rewrite <- (associative g b (invert b)).
+  rewrite (rightInverse g).
+  rewrite (leftUnit g).
+  apply (rightInverse g).
+Qed.
+
 Lemma leftInjection(g: Group): forall a x y: g, op a x = op a y-> x = y.
 Proof.
   intros a x y H.
@@ -253,56 +280,97 @@ Proof.
 Qed.
 
 
-Definition kernSig{g1 g2: Group}(f: GroupHom g1 g2): GroupSig.
-  destruct (groupHomAx f) as [[H1 H2] H3].
-  unfold isSemiGroupHom in H1.
-  refine (
+Section subGroup.
+  Variable g: Group.
+  Variable P: g -> Prop.
+  Variable H1: exists a, P a.
+  Variable H2: forall a b, P a -> P b -> P (op a (invert b)).
+
+  Definition subGroupSig: GroupSig.
+    assert (H3: P unit).
+    destruct H1 as [a Ha].
+    rewrite <- (rightInverse g a).
+    apply H2; assumption.
+    assert (H4: forall a, P a -> P (invert a)).
+    intros a Ha.
+    rewrite <- (leftUnit g (invert a)).
+    apply H2; try assumption.
+    assert (H5: forall a b, P a -> P b -> P (op a b)).
+    intros a b Ha Hb.
+    rewrite <- (inverseId g b).
+    apply H2; try assumption.
+    apply H4; try assumption.
+    refine (
       Build_GroupSig (
         Build_MonoidSig (
           Build_SemiGroupSig
-            { x | f x = unit }
+            (sig P)
             (fun x y =>
               let (x', Hx) := x in
               let (y', Hy) := y in
-                exist _ (op x' y') _))
-          (exist _ unit _))
+                exist _ (op x' y') (H5 _ _ Hx Hy)))
+          (exist _ unit H3))
         (fun x =>
           let (x', Hx) := x in
-            exist _ (invert x') _)).
-  clear x. simpl in Hx.
+            exist _ (invert x') (H4 _ Hx))).
+  Defined.
+
+  Definition subGroupHom: GroupHom subGroupSig g.
+    exists (@proj1_sig _ _).
+    repeat split.
+    unfold isSemiGroupHom; simpl.
+    intros [x Hx] [y Hy]; simpl.
+    reflexivity.
+    intros [x Hx]; simpl.
+    reflexivity.
+  Defined.
+
+  Lemma subGroupEmbedding: forall x y, subGroupHom x = subGroupHom y -> x = y.
+  Proof.
+    intros [x Hx] [y Hy]. simpl.
+    apply subset_eq_compat.
+  Qed.
+
+  Lemma subGroupAx: GroupAx subGroupSig.
+  Proof.
+    apply (groupAxFromHom _ subGroupEmbedding).
+  Qed.
+
+  Definition subGroup: Group := exist _ _ subGroupAx.
+End subGroup.
+
+
+Definition kern{g1 g2: Group}(f: GroupHom g1 g2): Group.
+  destruct (groupHomAx f) as [[H1 H2] H3].
+  unfold isSemiGroupHom in H1.
+  apply (subGroup g1 (fun x => f x = unit)).
+  exists unit; assumption.
+  intros a b H4 H5.
+  rewrite H1, H4.
   rewrite <- H3.
-  rewrite Hx.
-  apply (unitUnique2 g2 unit).
-  apply (rightInverse g2).
-  Unshelve.
-  simpl in Hx, Hy.
-  rewrite H1, Hx, Hy.
+  rewrite H5.
+  rewrite inverseUnit.
   apply (rightUnit g2).
-  assumption.
 Defined.
 
-Definition kernHom{g1 g2: Group}(f: GroupHom g1 g2): GroupHom (kernSig f) g1.
-  destruct f as [f [[H1 H2] H3]].
-  exists (@proj1_sig _ _). simpl.
+
+Definition automorphism{g: Group}(a: g): GroupHom g g.
+  exists (fun x => op a (op x (invert a))).
   repeat split.
-  unfold isSemiGroupHom; simpl.
-  intros [x Hx] [y Hy]; simpl.
+  unfold isSemiGroupHom.
+  intros x y.
+  repeat rewrite (associative g).
+  f_equal. f_equal.
+  rewrite <- (associative g).
+  rewrite (leftInverse g).
+  rewrite (leftUnit g).
   reflexivity.
-  intros [x Hx]; simpl.
-  reflexivity.
+  rewrite (leftUnit g).
+  apply (rightInverse g).
+  intro x.
+  repeat rewrite (inverseOp g).
+  rewrite (inverseId g).
+  apply (associative g).
 Defined.
 
-Lemma kernHomInjective{g1 g2: Group}(f: GroupHom g1 g2): forall x y, kernHom f x = kernHom f y -> x = y.
-Proof.
-  destruct f as [f [[H1 H2] H3]]. simpl.
-  intros [x Hx] [y Hy]. simpl.
-  apply subset_eq_compat.
-Qed.
-
-Lemma kernAx{g1 g2: Group}(f: GroupHom g1 g2): GroupAx (kernSig f).
-Proof.
-  apply (groupAxFromHom _ (kernHomInjective f)).
-Qed.
-
-Definition kern{g1 g2} f: Group := exist _ _ (@kernAx g1 g2 f).
 

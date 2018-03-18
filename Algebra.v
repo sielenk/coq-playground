@@ -259,20 +259,25 @@ Definition groupFromSemigroup(h: SemiGroup):
 Defined.
 
 
-Lemma semiGroupHomIsGroupHom{g1 g2: Group}: SemiGroupHom g1 g2 -> GroupHom g1 g2.
+Lemma semiGroupHomIsGroupHom{g1 g2: Group}(f: g1 -> g2): isSemiGroupHom f -> isGroupHom f.
 Proof.
-  intro f.
-  set (H1 := semiGroupHomAx f).
+  intro H1.
   assert (H2: f unit = unit).
   apply (unitUnique2 _ (f unit)).
   rewrite <- H1. f_equal. apply (rightUnit g1).
-  exists f.
   repeat split; try assumption.
   intro x.
   symmetry. apply inverseUnique.
   rewrite <- H1.
   rewrite (rightInverse g1).
   assumption.
+Qed.
+
+Lemma semiGroupHomToGroupHom{g1 g2: Group}: SemiGroupHom g1 g2 -> GroupHom g1 g2.
+Proof.
+  intros [f H1].
+  exists f.
+  apply (semiGroupHomIsGroupHom _ H1).
 Qed.
 
 Lemma groupAxFromHom{g1: GroupSig}{g2: Group}(f: GroupHom g1 g2): (forall x y, f x = f y -> x = y) -> GroupAx g1.
@@ -389,8 +394,7 @@ Defined.
 
 Definition automorphism{g: Group}(a: g): GroupHom g g.
   exists (fun x => a * x * invert a).
-  repeat split.
-  unfold isSemiGroupHom.
+  apply semiGroupHomIsGroupHom.
   intros x y.
   repeat rewrite (associative g).
   f_equal. f_equal.
@@ -398,13 +402,6 @@ Definition automorphism{g: Group}(a: g): GroupHom g g.
   rewrite (leftInverse g).
   rewrite (leftUnit g).
   reflexivity.
-  rewrite (rightUnit g).
-  apply (rightInverse g).
-  intro x.
-  repeat rewrite (inverseOp g).
-  rewrite (inverseId g).
-  symmetry.
-  apply (associative g).
 Defined.
 
 

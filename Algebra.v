@@ -134,7 +134,7 @@ Definition GroupHom(g1 g2: GroupSig) := sig (@isGroupHom g1 g2).
 Definition groupHomFun{g1 g2}: GroupHom g1 g2 -> g1 -> g2 := @proj1_sig _ _.
 Coercion   groupHomFun: GroupHom >-> Funclass.
 
-Definition groupHomAx{g1 g2} : forall f: GroupHom g1 g2, isGroupHom f := @proj2_sig _ _.
+Definition groupHomAx{g1 g2}: forall f: GroupHom g1 g2, isGroupHom f := @proj2_sig _ _.
 Coercion   groupHomAx: GroupHom >-> isGroupHom.
 
 
@@ -282,8 +282,9 @@ Qed.
 
 Lemma groupAxFromHom{g1: GroupSig}{g2: Group}(f: GroupHom g1 g2): (forall x y, f x = f y -> x = y) -> GroupAx g1.
 Proof.
-  destruct f as [f [[H1 H2] H3]]. simpl. intro H4.
+  destruct f as [f [[H1 H2] H3]].
   unfold isSemiGroupHom in H1.
+  simpl. intro H4.
   apply makeGroupAx; intros; apply H4; repeat rewrite H1.
   apply (associative g2).
   rewrite H2. apply (leftUnit g2).

@@ -313,7 +313,15 @@ Definition subGroupSig{g: Group}: SubGroup g -> GroupSig.
           exist _ (invert x') (H4 _ Hx))).
 Defined.
 
-Definition subGroupHom{g: Group}(h: SubGroup g): GroupHom (subGroupSig h) g.
+
+Definition isIn{g: Group}(h: SubGroup g): g -> Prop := let (P, _, _) := h in P.
+
+Definition subGroupInsert{g: Group}(h: SubGroup g) :=
+  match h as h' return (forall x, isIn h' x -> subGroupSig h') with
+  | makeSubGroup _ P _ _ => exist P
+  end.
+
+Definition subGroupExtract{g: Group}(h: SubGroup g): GroupHom (subGroupSig h) g.
   destruct h as [P H1 H2].
   exists (@proj1_sig _ _).
   repeat split.
@@ -324,12 +332,20 @@ Definition subGroupHom{g: Group}(h: SubGroup g): GroupHom (subGroupSig h) g.
   reflexivity.
 Defined.
 
-Lemma subGroupEmbedding{g: Group}(h: SubGroup g): forall x y, subGroupHom h x = subGroupHom h y -> x = y.
+
+Lemma subGroupEmbedding{g: Group}(h: SubGroup g): forall x y, subGroupExtract h x = subGroupExtract h y -> x = y.
 Proof.
   destruct h as [P H1 H2].
   intros [x Hx] [y Hy]. simpl.
   apply subset_eq_compat.
 Qed.
+
+Lemma subGroupInOut{g: Group}(h: SubGroup g) x H: subGroupExtract h (subGroupInsert h x H) = x.
+Proof.
+  destruct h as [P H1 H2].
+  reflexivity.
+Qed.
+
 
 Lemma subGroupAx{g: Group}(h: SubGroup g): GroupAx (subGroupSig h).
 Proof.

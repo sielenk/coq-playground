@@ -358,6 +358,32 @@ Definition subGroupExtract{g: Group}(h: SubGroup g): GroupHom (subGroupSig h) g.
 Defined.
 
 
+
+Lemma subGroupInsertUnit{g: Group}(h: SubGroup g) H: subGroupInsert h unit H = unit.
+Proof.
+  destruct h as [P H1 H2].
+  simpl.
+  f_equal.
+  apply proof_irrelevance.
+Qed.
+
+Lemma subGroupInsertInvert{g: Group}(h: SubGroup g) x H1 H2: subGroupInsert h (invert x) H1 = invert (subGroupInsert h x H2).
+Proof.
+  destruct h as [P H3 H4].
+  simpl.
+  f_equal.
+  apply proof_irrelevance.
+Qed.
+
+Lemma subGroupInsertOp{g: Group}(h: SubGroup g) x y H1 H2 H3:
+  subGroupInsert h (op x y) H1 = op (subGroupInsert h x H2) (subGroupInsert h y H3).
+Proof.
+  destruct h as [P H4 H5].
+  simpl.
+  f_equal.
+  apply proof_irrelevance.
+Qed.
+
 Lemma subGroupEmbedding{g: Group}(h: SubGroup g): forall x y, subGroupExtract h x = subGroupExtract h y -> x = y.
 Proof.
   destruct h as [P H1 H2].

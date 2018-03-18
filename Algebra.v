@@ -341,7 +341,7 @@ Definition subGroupSig{g: Group}(h: SubGroup g): GroupSig :=
 
 
 
-Definition subGroupInsert{g: Group}(h: SubGroup g) :=
+Definition subGroupInsert{g: Group}(h: SubGroup g): forall x, isIn h x -> subGroupSig h :=
   match h as h' return (forall x, isIn h' x -> subGroupSig h') with
   | makeSubGroup _ P _ _ => exist P
   end.
@@ -424,6 +424,7 @@ Definition kern{g1 g2: Group}(f: GroupHom g1 g2): SubGroup g1.
   destruct (groupHomAx f) as [[H1 H2] H3].
   unfold isSemiGroupHom in H1.
   refine (makeSubGroup g1 (fun x => f x = unit) (ex_intro _ unit H2) (fun a b H4 H5 => _)).
+  simpl in H4, H5.
   rewrite H1, H4.
   rewrite <- H3.
   rewrite H5.

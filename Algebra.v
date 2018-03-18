@@ -280,72 +280,83 @@ Proof.
 Qed.
 
 
-Section subGroup.
-  Variable g: Group.
-  Variable P: g -> Prop.
-  Variable H1: exists a, P a.
-  Variable H2: forall a b, P a -> P b -> P (op a (invert b)).
+Inductive SubGroup(g: Group) :=
+  makeSubGroup(P: g -> Prop): (exists a, P a) -> (forall a b, P a -> P b -> P (op a (invert b))) -> SubGroup g.
 
-  Definition subGroupSig: GroupSig.
-    assert (H3: P unit).
-    destruct H1 as [a Ha].
-    rewrite <- (rightInverse g a).
-    apply H2; assumption.
-    assert (H4: forall a, P a -> P (invert a)).
-    intros a Ha.
-    rewrite <- (leftUnit g (invert a)).
-    apply H2; try assumption.
-    assert (H5: forall a b, P a -> P b -> P (op a b)).
-    intros a b Ha Hb.
-    rewrite <- (inverseId g b).
-    apply H2; try assumption.
-    apply H4; try assumption.
-    refine (
-      Build_GroupSig (
-        Build_MonoidSig (
-          Build_SemiGroupSig
-            (sig P)
-            (fun x y =>
-              let (x', Hx) := x in
-              let (y', Hy) := y in
-                exist _ (op x' y') (H5 _ _ Hx Hy)))
-          (exist _ unit H3))
-        (fun x =>
-          let (x', Hx) := x in
-            exist _ (invert x') (H4 _ Hx))).
-  Defined.
+Definition subGroupSig{g: Group}: SubGroup g -> GroupSig.
+  intros [P H1 H2].
+  assert (H3: P unit).
+  destruct H1 as [a Ha].
+  rewrite <- (rightInverse g a).
+  apply H2; assumption.
+  assert (H4: forall a, P a -> P (invert a)).
+  intros a Ha.
+  rewrite <- (leftUnit g (invert a)).
+  apply H2; try assumption.
+  assert (H5: forall a b, P a -> P b -> P (op a b)).
+  intros a b Ha Hb.
+  rewrite <- (inverseId g b).
+  apply H2; try assumption.
+  apply H4; try assumption.
+  refine (
+    Build_GroupSig (
+      Build_MonoidSig (
+        Build_SemiGroupSig
+          (sig P)
+          (fun x y =>
+            let (x', Hx) := x in
+            let (y', Hy) := y in
+              exist _ (op x' y') (H5 _ _ Hx Hy)))
+        (exist _ unit H3))
+      (fun x =>
+        let (x', Hx) := x in
+          exist _ (invert x') (H4 _ Hx))).
+Defined.
 
-  Definition subGroupHom: GroupHom subGroupSig g.
-    exists (@proj1_sig _ _).
-    repeat split.
-    unfold isSemiGroupHom; simpl.
-    intros [x Hx] [y Hy]; simpl.
-    reflexivity.
-    intros [x Hx]; simpl.
-    reflexivity.
-  Defined.
+Definition subGroupHom{g: Group}(h: SubGroup g): GroupHom (subGroupSig h) g.
+  destruct h as [P H1 H2].
+  exists (@proj1_sig _ _).
+  repeat split.
+  unfold isSemiGroupHom; simpl.
+  intros [x Hx] [y Hy]; simpl.
+  reflexivity.
+  intros [x Hx]; simpl.
+  reflexivity.
+Defined.
 
-  Lemma subGroupEmbedding: forall x y, subGroupHom x = subGroupHom y -> x = y.
-  Proof.
-    intros [x Hx] [y Hy]. simpl.
-    apply subset_eq_compat.
-  Qed.
+Lemma subGroupEmbedding{g: Group}(h: SubGroup g): forall x y, subGroupHom h x = subGroupHom h y -> x = y.
+Proof.
+  destruct h as [P H1 H2].
+  intros [x Hx] [y Hy]. simpl.
+  apply subset_eq_compat.
+Qed.
 
-  Lemma subGroupAx: GroupAx subGroupSig.
-  Proof.
-    apply (groupAxFromHom _ subGroupEmbedding).
-  Qed.
+Lemma subGroupAx{g: Group}(h: SubGroup g): GroupAx (subGroupSig h).
+Proof.
+  apply (groupAxFromHom _ (subGroupEmbedding _)).
+Qed.
 
-  Definition subGroup: Group := exist _ _ subGroupAx.
-End subGroup.
+Definition subGroup{g: Group}(h: SubGroup g): Group := exist _ _ (subGroupAx h).
+
+Coercion subGroup: SubGroup >-> Group.
 
 
-Definition kern{g1 g2: Group}(f: GroupHom g1 g2): Group.
+
+Definition minimalSubGroup(g: Group): SubGroup g.
+  refine (makeSubGroup g (eq unit) (ex_intro _ _ eq_refl) (fun a b => _)).
+  intros [] [].
+  rewrite inverseUnit.
+  rewrite (rightUnit g).
+  reflexivity.
+Defined.
+
+Definition maximalSubGroup(g: Group): SubGroup g :=
+  makeSubGroup g (fun x => True) (ex_intro _ unit I) (fun _ _ _ _ => I).
+
+Definition kern{g1 g2: Group}(f: GroupHom g1 g2): SubGroup g1.
   destruct (groupHomAx f) as [[H1 H2] H3].
   unfold isSemiGroupHom in H1.
-  apply (subGroup g1 (fun x => f x = unit)).
-  exists unit; assumption.
-  intros a b H4 H5.
+  refine (makeSubGroup g1 (fun x => f x = unit) (ex_intro _ unit H2) (fun a b H4 H5 => _)).
   rewrite H1, H4.
   rewrite <- H3.
   rewrite H5.

@@ -304,7 +304,7 @@ Definition subGroupSig{g: Group}: SubGroup g -> GroupSig.
   rewrite <- (inverseId g b).
   apply H2; try assumption.
   apply H4; try assumption.
-  refine (
+  exact (
     Build_GroupSig (
       Build_MonoidSig (
         Build_SemiGroupSig

@@ -295,38 +295,51 @@ Qed.
 Inductive SubGroup(g: Group) :=
   makeSubGroup(P: g -> Prop): (exists a, P a) -> (forall a b, P a -> P b -> P (a * invert b)) -> SubGroup g.
 
-Definition subGroupSig{g: Group}: SubGroup g -> GroupSig.
-  intros [P H1 H2].
-  assert (H3: P unit).
+Definition isIn{g: Group}(h: SubGroup g): g -> Prop := let (P, _, _) := h in P.
+
+Lemma unitIsIn{g: Group}(h: SubGroup g): isIn h unit.
+Proof.
+  destruct h as [P H1 H2]. simpl.
   destruct H1 as [a Ha].
   rewrite <- (rightInverse g a).
   apply H2; assumption.
-  assert (H4: forall a, P a -> P (invert a)).
-  intros a Ha.
+Qed.
+
+Lemma invertIsIn{g: Group}(h: SubGroup g)(a: g): isIn h a -> isIn h (invert a).
+Proof.
+  set (H1 := unitIsIn h).
+  destruct h as [P H2 H3]. simpl in H1 |- *.
+  intro Ha.
   rewrite <- (leftUnit g (invert a)).
-  apply H2; try assumption.
-  assert (H5: forall a b, P a -> P b -> P (a * b)).
-  intros a b Ha Hb.
+  apply H3; try assumption.
+Qed.
+
+Lemma opIsIn{g: Group}(h: SubGroup g)(a b: g): isIn h a -> isIn h b -> isIn h (a * b).
+Proof.
+  set (H1 := invertIsIn h).
+  destruct h as [P H2 H3]. simpl in H1 |- *.
+  intros Ha Hb.
   rewrite <- (inverseId g b).
-  apply H2; try assumption.
-  apply H4; try assumption.
-  exact (
+  apply H3; try assumption.
+  apply H1; try assumption.
+Qed.
+
+
+Definition subGroupSig{g: Group}(h: SubGroup g): GroupSig :=
     Build_GroupSig (
       Build_MonoidSig (
         Build_SemiGroupSig
-          (sig P)
+          (sig (isIn h))
           (fun x y =>
             let (x', Hx) := x in
             let (y', Hy) := y in
-              exist _ (x' * y') (H5 _ _ Hx Hy)))
-        (exist _ unit H3))
+              exist _ (x' * y') (opIsIn h x' y' Hx Hy)))
+        (exist _ unit (unitIsIn h)))
       (fun x =>
         let (x', Hx) := x in
-          exist _ (invert x') (H4 _ Hx))).
-Defined.
+          exist _ (invert x') (invertIsIn h x' Hx)).
 
 
-Definition isIn{g: Group}(h: SubGroup g): g -> Prop := let (P, _, _) := h in P.
 
 Definition subGroupInsert{g: Group}(h: SubGroup g) :=
   match h as h' return (forall x, isIn h' x -> subGroupSig h') with

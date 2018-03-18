@@ -1,6 +1,8 @@
 Require Import ProofIrrelevance.
 Require Import EqdepFacts.
 
+Delimit Scope group_scope with group.
+Local Open Scope group_scope.
 
 
 Record SemiGroupSig := {
@@ -10,10 +12,14 @@ Record SemiGroupSig := {
 
 Arguments op {s}.
 
+Notation "x * y" := (op x y) : group_scope.
+
+
+
 Coercion carrier: SemiGroupSig >-> Sortclass.
 
 Record SemiGroupAx(sig: SemiGroupSig) := {
-  associative: forall x y z: sig, op (op x y) z = op x (op y z);
+  associative: forall x y z: sig, (x * y) * z = x * (y * z);
 }.
 
 Arguments associative {sig}.
@@ -27,7 +33,7 @@ Definition semiGroupAx: forall G: SemiGroup, SemiGroupAx G := @proj2_sig _ _.
 Coercion   semiGroupAx : SemiGroup >-> SemiGroupAx.
 
 Definition isSemiGroupHom{h1 h2: SemiGroupSig}(f: h1 -> h2): Prop :=
-  forall x1 x2, f (op x1 x2) = op (f x1) (f x2).
+  forall x1 x2, f (x1 * x2) = f x1 * f x2.
 
 Definition SemiGroupHom(h1 h2: SemiGroupSig) := sig (@isSemiGroupHom h1 h2).
 
@@ -52,8 +58,8 @@ Coercion monoidSigIsSemiGroup: MonoidSig >-> SemiGroupSig.
 
 Record MonoidAx(sig: MonoidSig) := {
   monoidIsSemiGroupAx: SemiGroupAx sig;
-  leftUnit:     forall x: sig, op unit x = x;
-  rightUnit:    forall x: sig, op x unit = x
+  leftUnit:     forall x: sig, unit * x = x;
+  rightUnit:    forall x: sig, x * unit = x
 }.
 
 Arguments leftUnit {sig}.
@@ -81,7 +87,7 @@ Definition monoidHomAx{m1 m2} : forall f: MonoidHom m1 m2, isMonoidHom f := @pro
 Coercion   monoidHomAx: MonoidHom >-> isMonoidHom.
 
 
-Lemma unitUnique(m: Monoid): forall e: m, (forall x, op x e = x) -> e = unit.
+Lemma unitUnique(m: Monoid): forall e: m, (forall x, x * e = x) -> e = unit.
 Proof.
   intros e H.
   rewrite <- (leftUnit m e).
@@ -103,8 +109,8 @@ Coercion groupSigIsMonoidSig: GroupSig >-> MonoidSig.
 
 Record GroupAx(sig: GroupSig) := {
   groupIsMonoidAx: MonoidAx sig;
-  leftInverse:  forall x: sig, op (invert x) x = unit;
-  rightInverse: forall x: sig, op x (invert x) = unit
+  leftInverse:  forall x: sig, invert x * x = unit;
+  rightInverse: forall x: sig, x * invert x = unit
 }.
 
 Arguments leftInverse {sig}.
@@ -133,18 +139,18 @@ Coercion   groupHomAx: GroupHom >-> isGroupHom.
 
 
 Lemma makeGroupAx(sig: GroupSig):
-  (forall x y z: sig, op (op x y) z = op x (op y z)) ->
-  (forall x: sig, op unit x = x) ->
-  (forall x: sig, op (invert x) x = unit) ->
+  (forall x y z: sig, (x * y) * z = x * (y * z)) ->
+  (forall x: sig, unit * x = x) ->
+  (forall x: sig, invert x * x = unit) ->
   GroupAx sig.
 Proof.
   intros assoc leftUnit leftInverse.
-  assert (rightInverse: forall x : sig, op x (invert x) = unit).
+  assert (rightInverse: forall x : sig, x * invert x = unit).
   intros x.
-  rewrite <- (leftUnit (op x (invert x))).
-  transitivity (op (op (invert (invert x)) (invert x)) (op x (invert x))).
+  rewrite <- (leftUnit (x * invert x)).
+  transitivity ((invert (invert x) * invert x) * (x * invert x)).
   f_equal. symmetry. apply leftInverse.
-  transitivity (op (invert (invert x)) (op (op (invert x) x) (invert x))).
+  transitivity (invert (invert x) * ((invert x * x) * invert x)).
   rewrite assoc. f_equal. symmetry. apply assoc.
   rewrite leftInverse.
   rewrite leftUnit.
@@ -158,7 +164,7 @@ Proof.
 Qed.
 
 
-Lemma inverseUnique(g: Group): forall x y: g, op x y = unit -> y = invert x.
+Lemma inverseUnique(g: Group): forall x y: g, x * y = unit -> y = invert x.
 Proof.
   intros x y H.
   rewrite <- (rightUnit g (invert x)).
@@ -183,7 +189,7 @@ Proof.
   apply (leftUnit g).
 Qed.
 
-Lemma inverseOp(g: Group): forall a b: g, invert (op a b) = op (invert b) (invert a).
+Lemma inverseOp(g: Group): forall a b: g, invert (a * b) = invert b * invert a.
 Proof.
   intros a b.
   symmetry.
@@ -195,7 +201,7 @@ Proof.
   apply (rightInverse g).
 Qed.
 
-Lemma leftInjection(g: Group): forall a x y: g, op a x = op a y-> x = y.
+Lemma leftInjection(g: Group): forall a x y: g, a * x = a * y-> x = y.
 Proof.
   intros a x y H.
   rewrite <- (leftUnit g x).
@@ -207,7 +213,7 @@ Proof.
   apply (leftUnit g y).
 Qed.
 
-Lemma rightInjection(g: Group): forall a x y: g, op x a = op y a -> x = y.
+Lemma rightInjection(g: Group): forall a x y: g, x * a = y * a -> x = y.
 Proof.
   intros a x y H.
   rewrite <- (rightUnit g x).
@@ -219,7 +225,7 @@ Proof.
   apply (rightUnit g y).
 Qed.
 
-Lemma unitUnique2(g: Group): forall x y: g, op x y = x -> y = unit.
+Lemma unitUnique2(g: Group): forall x y: g, x * y = x -> y = unit.
 Proof.
   intros x y H.
   apply (leftInjection g x).
@@ -230,8 +236,8 @@ Qed.
 
 Definition groupFromSemigroup(h: SemiGroup):
   h ->
-  (forall a y: h, { x | op a x = y }) ->
-  (forall a y: h, { x | op x a = y }) ->
+  (forall a y: h, { x | a * x = y }) ->
+  (forall a y: h, { x | x * a = y }) ->
   Group.
 
   intros b H1 H2.
@@ -242,8 +248,8 @@ Definition groupFromSemigroup(h: SemiGroup):
   apply (associative h).
   intro a.
   destruct (H1 b a) as [a' Ha'].
-  transitivity (op e (op b a')).
-  f_equal. symmetry. assumption.
+  transitivity (e * (b * a')).
+  f_equal. auto.
   rewrite <- (associative h).
   rewrite He. assumption.
   intro a.
@@ -281,7 +287,7 @@ Qed.
 
 
 Inductive SubGroup(g: Group) :=
-  makeSubGroup(P: g -> Prop): (exists a, P a) -> (forall a b, P a -> P b -> P (op a (invert b))) -> SubGroup g.
+  makeSubGroup(P: g -> Prop): (exists a, P a) -> (forall a b, P a -> P b -> P (a * invert b)) -> SubGroup g.
 
 Definition subGroupSig{g: Group}: SubGroup g -> GroupSig.
   intros [P H1 H2].
@@ -293,7 +299,7 @@ Definition subGroupSig{g: Group}: SubGroup g -> GroupSig.
   intros a Ha.
   rewrite <- (leftUnit g (invert a)).
   apply H2; try assumption.
-  assert (H5: forall a b, P a -> P b -> P (op a b)).
+  assert (H5: forall a b, P a -> P b -> P (a * b)).
   intros a b Ha Hb.
   rewrite <- (inverseId g b).
   apply H2; try assumption.
@@ -306,7 +312,7 @@ Definition subGroupSig{g: Group}: SubGroup g -> GroupSig.
           (fun x y =>
             let (x', Hx) := x in
             let (y', Hy) := y in
-              exist _ (op x' y') (H5 _ _ Hx Hy)))
+              exist _ (x' * y') (H5 _ _ Hx Hy)))
         (exist _ unit H3))
       (fun x =>
         let (x', Hx) := x in
@@ -382,7 +388,7 @@ Defined.
 
 
 Definition automorphism{g: Group}(a: g): GroupHom g g.
-  exists (fun x => op a (op x (invert a))).
+  exists (fun x => a * x * invert a).
   repeat split.
   unfold isSemiGroupHom.
   intros x y.
@@ -392,11 +398,12 @@ Definition automorphism{g: Group}(a: g): GroupHom g g.
   rewrite (leftInverse g).
   rewrite (leftUnit g).
   reflexivity.
-  rewrite (leftUnit g).
+  rewrite (rightUnit g).
   apply (rightInverse g).
   intro x.
   repeat rewrite (inverseOp g).
   rewrite (inverseId g).
+  symmetry.
   apply (associative g).
 Defined.
 

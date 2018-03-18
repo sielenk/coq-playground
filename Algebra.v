@@ -44,6 +44,9 @@ Definition semiGroupHomAx{h1 h2} : forall f: SemiGroupHom h1 h2, isSemiGroupHom 
 Coercion   semiGroupHomAx: SemiGroupHom >-> isSemiGroupHom.
 
 
+Definition abelian(h: SemiGroupSig) := forall a b: h, a * b = b * a.
+
+
 (***************************************************************)
 
 

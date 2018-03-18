@@ -408,3 +408,36 @@ Definition automorphism{g: Group}(a: g): GroupHom g g.
 Defined.
 
 
+Definition isNormal{g: Group}(h: SubGroup g): Prop :=
+  let (P, _, _) := h in forall x a, P (a * x * invert a) -> P x.
+
+Lemma minimalIsNormal(g: Group): isNormal (minimalSubGroup g).
+Proof.
+  intros x a H.
+  apply (leftInjection g a).
+  apply (rightInjection g (invert a)).
+  rewrite <- H.
+  rewrite (rightUnit g).
+  apply (rightInverse g).
+Qed.
+
+Lemma maximalIsNormal(g: Group): isNormal (maximalSubGroup g).
+Proof.
+  intros x a H.
+  auto.
+Qed.
+
+Lemma kernIsNormal{g1 g2: Group}(f: GroupHom g1 g2): isNormal (kern f).
+Proof.
+  destruct f as [f [[H1 H2] H3]]; simpl.
+  unfold isSemiGroupHom in H1.
+  intros x a H4.
+  repeat rewrite H1 in H4.
+  apply (leftInjection g2 (f a)).
+  apply (rightInjection g2 (f (invert a))).
+  rewrite H4.
+  rewrite (rightUnit g2).
+  rewrite <- H3.
+  rewrite (rightInverse g2).
+  reflexivity.
+Qed.

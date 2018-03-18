@@ -409,6 +409,20 @@ Coercion subGroup: SubGroup >-> Group.
 
 
 
+Definition subSubGroup{g: Group}(h: SubGroup g)(k: SubGroup h): SubGroup g.
+  refine (makeSubGroup g (fun x => ex (fun H => isIn k (subGroupInsert h x H))) _ _).
+  exists unit.
+  exists (unitIsIn h).
+  rewrite subGroupInsertUnit.
+  apply (unitIsIn k).
+  intros a b [Ha1 Ha2] [Hb1 Hb2].
+  exists (opIsIn _ _ _ Ha1 (invertIsIn _ _ Hb1)).
+  rewrite (subGroupInsertOp _ _ _ _ Ha1 (invertIsIn _ _ Hb1)).
+  rewrite (subGroupInsertInvert _ _ (invertIsIn _ _ Hb1) Hb1).
+  apply (opIsIn k); try assumption.
+  apply (invertIsIn k); assumption.
+Defined.
+
 Definition minimalSubGroup(g: Group): SubGroup g.
   refine (makeSubGroup g (eq unit) (ex_intro _ _ eq_refl) (fun a b => _)).
   intros [] [].

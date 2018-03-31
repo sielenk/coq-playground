@@ -449,6 +449,44 @@ Definition kern{g1 g2: Group}(f: GroupHom g1 g2): SubGroup g1.
   apply (rightUnit g2).
 Defined.
 
+Definition centralizer(g: Group)(P: g -> Prop): SubGroup g.
+  refine (makeSubGroup g (fun a => forall x, P x -> a * x = x * a) (ex_intro _ unit _) (fun a b => _)).
+  intros x H.
+  rewrite (rightUnit g).
+  apply (leftUnit g).
+  intros H1 H2 x Hx.
+  rewrite <- (associative g).
+  rewrite <- (H1 x Hx).
+  repeat rewrite (associative g).
+  f_equal.
+  apply (rightInjection g b).
+  repeat rewrite (associative g).
+  rewrite <- (H2 x Hx).
+  rewrite <- (associative g).
+  rewrite (leftInverse g).
+  rewrite (rightUnit g).
+  apply (leftUnit g).
+Defined.
+
+Definition center(g: Group) := centralizer g (fun _ => True).
+
+Lemma centerInCentralizer(g: Group)(P: g -> Prop): forall a, isIn (center g) a -> isIn (centralizer g P) a.
+Proof.
+  intros a Ha.
+  simpl in Ha.
+  intros b Hb.
+  apply Ha.
+  auto.
+Qed.
+
+Lemma centerAbelian(g: Group): abelian (center g).
+Proof.
+  intros [a Ha] [b Hb].
+  apply subGroupEmbedding.
+  simpl.
+  rewrite Ha; auto.
+Qed.
+
 
 Definition automorphism{g: Group}(a: g): GroupHom g g.
   exists (fun x => a * x * invert a).
@@ -495,4 +533,26 @@ Proof.
   rewrite <- H3.
   rewrite (rightInverse g2).
   reflexivity.
+Qed.
+
+Lemma centerIsNormal(g: Group): isNormal (center g).
+Proof.
+  intros x a Hx y _.
+  set (H := Hx (a * y * invert a) I).
+  repeat rewrite (associative g) in H.
+  apply (leftInjection g) in H.
+  repeat rewrite <- (associative g) in H.
+  apply (rightInjection g) in H.
+  transitivity (x * invert a * a * y).
+  f_equal.
+  rewrite (associative g).
+  rewrite (leftInverse g).
+  rewrite (rightUnit g).
+  auto.
+  rewrite H.
+  f_equal.
+  rewrite (associative g).
+  rewrite (leftInverse g).
+  rewrite (rightUnit g).
+  auto.
 Qed.

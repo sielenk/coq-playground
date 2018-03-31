@@ -488,6 +488,45 @@ Proof.
 Qed.
 
 
+Definition konjugated{g: Group}(x y: g): Prop :=
+  ex (fun a => x = a * y * invert a).
+
+Lemma konjugatedReflexive{g: Group}(x: g): konjugated x x.
+Proof.
+  exists unit.
+  rewrite (leftUnit g).
+  rewrite (inverseUnit g).
+  rewrite (rightUnit g).
+  auto.
+Qed.
+
+Lemma konjugatedSymmetric{g: Group}(x y: g): konjugated x y -> konjugated y x.
+Proof.
+  intros [a H].
+  exists (invert a).
+  rewrite H.
+  transitivity ((invert a * a) * y * (invert a * invert (invert a))).
+  rewrite (rightInverse g).
+  rewrite (leftInverse g).
+  rewrite (rightUnit g).
+  rewrite (leftUnit g).
+  auto.
+  repeat rewrite (associative g).
+  auto.
+Qed.
+
+Lemma konjugatedTransitive{g: Group}(x y z: g): konjugated x y -> konjugated y z -> konjugated x z.
+Proof.
+  intros [a Ha] [b Hb].
+  exists (a * b).
+  rewrite Ha, Hb.
+  repeat rewrite (associative g).
+  repeat f_equal.
+  rewrite inverseOp.
+  auto.
+Qed.
+
+
 Definition automorphism{g: Group}(a: g): GroupHom g g.
   exists (fun x => a * x * invert a).
   apply semiGroupHomIsGroupHom.

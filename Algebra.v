@@ -433,6 +433,15 @@ Definition subSubGroup{g: Group}(h: SubGroup g)(k: SubGroup h): SubGroup g.
   apply (invertIsIn k); assumption.
 Defined.
 
+Definition subGroupCut{g: Group}(I: Type)(hi: I -> SubGroup g): SubGroup g.
+  refine (makeSubGroup g (fun x => forall i, isIn (hi i) x) _ _).
+  exists unit.
+  intro i; apply (unitIsIn _).
+  intros a b Ha Hb i.
+  apply opIsIn; try apply Ha; apply invertIsIn; apply Hb.
+Defined.
+
+
 Definition minimalSubGroup(g: Group): SubGroup g.
   refine (makeSubGroup g (eq unit) (ex_intro _ _ eq_refl) (fun a b => _)).
   intros [] [].

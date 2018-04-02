@@ -465,6 +465,17 @@ Definition kern{g1 g2: Group}(f: GroupHom g1 g2): SubGroup g1.
   apply (rightUnit g2).
 Defined.
 
+Definition image{g1 g2: Group}(f: GroupHom g1 g2): SubGroup g2.
+  destruct (groupHomAx f) as [[H1 H2] H3].
+  unfold isSemiGroupHom in H1.
+  refine (makeSubGroup g2 (fun x => ex (fun y => f y = x)) (ex_intro _ _ (ex_intro _ _ H2)) (fun a b => _)).
+  intros [a' Ha] [b' Hb].
+  exists (a' * invert b').
+  rewrite H1. rewrite <- H3, Ha, Hb.
+  reflexivity.
+Defined.
+
+
 Definition centralizer(g: Group)(P: g -> Prop): SubGroup g.
   refine (makeSubGroup g (fun a => forall x, P x -> a * x = x * a) (ex_intro _ unit _) (fun a b => _)).
   intros x H.

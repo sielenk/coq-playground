@@ -10,6 +10,9 @@ Record SemiGroupSig := {
   op: carrier -> carrier -> carrier
 }.
 
+Definition makeSemiGroupSig{X: Set}(op: X -> X -> X): SemiGroupSig :=
+  Build_SemiGroupSig X op.
+
 Arguments op {s}.
 
 Notation "x * y" := (op x y) : group_scope.
@@ -54,6 +57,9 @@ Record MonoidSig := {
   monoidSigIsSemiGroup: SemiGroupSig;
   unit: monoidSigIsSemiGroup;
 }.
+
+Definition makeMonoidSig{X: Set}(op: X -> X -> X)(unit: X): MonoidSig :=
+  Build_MonoidSig (makeSemiGroupSig op) unit.
 
 Arguments unit {m}.
 
@@ -105,6 +111,10 @@ Record GroupSig := {
   groupSigIsMonoidSig: MonoidSig;
   invert: groupSigIsMonoidSig -> groupSigIsMonoidSig
 }.
+
+Definition makeGroupSig{X: Set}(op: X -> X -> X)(unit: X)(invert: X -> X): GroupSig :=
+  Build_GroupSig (makeMonoidSig op unit) invert.
+
 
 Arguments invert {g}.
 
@@ -329,15 +339,12 @@ Qed.
 
 
 Definition subGroupSig{g: Group}(h: SubGroup g): GroupSig :=
-    Build_GroupSig (
-      Build_MonoidSig (
-        Build_SemiGroupSig
-          (sig (isIn h))
-          (fun x y =>
-            let (x', Hx) := x in
-            let (y', Hy) := y in
-              exist _ (x' * y') (opIsIn h x' y' Hx Hy)))
-        (exist _ unit (unitIsIn h)))
+    makeGroupSig (X := sig (isIn h))
+      (fun x y =>
+        let (x', Hx) := x in
+        let (y', Hy) := y in
+          exist _ (x' * y') (opIsIn h x' y' Hx Hy))
+      (exist _ unit (unitIsIn h))
       (fun x =>
         let (x', Hx) := x in
           exist _ (invert x') (invertIsIn h x' Hx)).

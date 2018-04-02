@@ -1,3 +1,9 @@
+(*
+ * Abstract Algebra
+ *
+ * (c) 2018, Marvin H. Sielenkemper
+ *)
+
 Require Import ProofIrrelevance.
 Require Import EqdepFacts.
 Require List.

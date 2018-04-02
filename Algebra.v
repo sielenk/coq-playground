@@ -1,5 +1,6 @@
 Require Import ProofIrrelevance.
 Require Import EqdepFacts.
+Require List.
 
 Delimit Scope group_scope with group.
 Local Open Scope group_scope.
@@ -513,6 +514,66 @@ Proof.
   simpl.
   rewrite Ha; auto.
 Qed.
+
+
+Definition generatedSubGroup{g: Group}(P: g -> Prop): SubGroup g.
+  refine (subGroupCut { h: SubGroup g | forall a: g, P a -> isIn h a } (@proj1_sig _ _)).
+Defined.
+
+
+Definition generatedSubGroup_2{g: Group}(P: g -> Prop): SubGroup g.
+  set (reduce_1 (tx: bool * sig P) := match tx with (t, (exist _ x _)) => if t then invert x else x end).
+  set (reduce_2 := List.fold_right (fun tx y => reduce_1 tx * y) unit).
+  set (invert_1 (tx: bool * sig P) := let (t, x) := tx in (negb t, x)).
+  set (invert_2 txs := List.rev (List.map invert_1 txs)).
+  set (P' a := exists xs, reduce_2 xs = a).
+
+  assert (H1: forall xs ys, reduce_2 (app xs ys) = reduce_2 xs * reduce_2 ys).
+  intro xs.
+  induction xs as [ | [t [x Hx]]]; intro ys.
+  rewrite (leftUnit g). reflexivity.
+  simpl. rewrite IHxs.
+  symmetry; apply (associative g).
+
+  assert (H2: forall xs, reduce_2 (invert_2 xs) = invert (reduce_2 xs)).
+  intro xs.
+  unfold reduce_2 at 1, invert_2.
+  rewrite List.fold_left_rev_right.
+  induction xs as [ | [t [x Hx]]].
+  symmetry. apply (inverseUnit g).
+  simpl. rewrite (inverseOp g).
+  set (x' := invert (if t then invert x else x)).
+  assert (x' = if negb t then invert x else x).
+  destruct t; auto. apply inverseId. destruct H.
+  generalize dependent x'. clear Hx x t. intro y.
+  rewrite <- IHxs. clear IHxs.
+  rewrite (rightUnit g).
+  generalize (List.map invert_1 xs). clear xs.
+  intros [ | x xs]; simpl.
+  symmetry; apply (leftUnit g).
+  rewrite (rightUnit g).
+  generalize (reduce_1 x) as x'. clear x. intro x.
+  generalize dependent y.
+  generalize dependent x.
+  induction xs as [ | x' xs]; auto.
+  simpl. generalize (reduce_1 x') as w. clear x'.
+  intros x y z.
+  rewrite <- IHxs.
+  rewrite <- (associative g).
+  reflexivity.
+
+  apply (makeSubGroup g P').
+
+  exists unit.
+  exists nil.
+  reflexivity.
+
+  intros a b [xas Hxa] [xbs Hxb].
+  exists (xas ++ (invert_2 xbs))%list.
+  rewrite H1, H2, Hxa, Hxb.
+  reflexivity.
+Defined.
+
 
 
 Definition konjugated{g: Group}(x y: g): Prop :=

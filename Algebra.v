@@ -520,13 +520,9 @@ Definition generatedSubGroup{g: Group}(P: g -> Prop): SubGroup g.
   refine (subGroupCut { h: SubGroup g | forall a: g, P a -> isIn h a } (@proj1_sig _ _)).
 Defined.
 
-
 Definition generatedSubGroup_2{g: Group}(P: g -> Prop): SubGroup g.
   set (reduce_1 (tx: bool * sig P) := match tx with (t, (exist _ x _)) => if t then invert x else x end).
   set (reduce_2 := List.fold_right (fun tx y => reduce_1 tx * y) unit).
-  set (invert_1 (tx: bool * sig P) := let (t, x) := tx in (negb t, x)).
-  set (invert_2 txs := List.rev (List.map invert_1 txs)).
-  set (P' a := exists xs, reduce_2 xs = a).
 
   assert (H1: forall xs ys, reduce_2 (app xs ys) = reduce_2 xs * reduce_2 ys).
   intro xs.
@@ -534,6 +530,9 @@ Definition generatedSubGroup_2{g: Group}(P: g -> Prop): SubGroup g.
   rewrite (leftUnit g). reflexivity.
   simpl. rewrite IHxs.
   symmetry; apply (associative g).
+
+  set (invert_1 (tx: bool * sig P) := let (t, x) := tx in (negb t, x)).
+  set (invert_2 txs := List.rev (List.map invert_1 txs)).
 
   assert (H2: forall xs, reduce_2 (invert_2 xs) = invert (reduce_2 xs)).
   intro xs.
@@ -544,7 +543,7 @@ Definition generatedSubGroup_2{g: Group}(P: g -> Prop): SubGroup g.
   simpl. rewrite (inverseOp g).
   set (x' := invert (if t then invert x else x)).
   assert (x' = if negb t then invert x else x).
-  destruct t; auto. apply inverseId. destruct H.
+  destruct t; auto; apply inverseId. destruct H.
   generalize dependent x'. clear Hx x t. intro y.
   rewrite <- IHxs. clear IHxs.
   rewrite (rightUnit g).
@@ -562,6 +561,8 @@ Definition generatedSubGroup_2{g: Group}(P: g -> Prop): SubGroup g.
   rewrite <- (associative g).
   reflexivity.
 
+  set (P' a := exists xs, reduce_2 xs = a).
+
   apply (makeSubGroup g P').
 
   exists unit.
@@ -574,6 +575,26 @@ Definition generatedSubGroup_2{g: Group}(P: g -> Prop): SubGroup g.
   reflexivity.
 Defined.
 
+Lemma generatedSubGroupEquiv{g: Group}(P: g -> Prop): forall a: g, isIn (generatedSubGroup P) a <-> isIn (generatedSubGroup_2 P) a.
+Proof.
+  intro a.
+  split.
+
+  intro H.
+  simpl in H.
+  refine (H (exist _ (generatedSubGroup_2 P) _)).
+  intros x Hx.
+  exists (cons (false, exist _ x Hx) nil).
+  apply (rightUnit g).
+
+  intros [txs H] [h Hh].
+  simpl. destruct H.
+  induction txs as [ | tx].
+  apply (unitIsIn h).
+  simpl.
+  apply (opIsIn h); try assumption.
+  destruct tx as [[ | ] [x Hx]]; try apply (invertIsIn h); auto.
+Qed.
 
 
 Definition konjugated{g: Group}(x y: g): Prop :=

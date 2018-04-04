@@ -522,6 +522,32 @@ Proof.
 Qed.
 
 
+Definition normalizer{g: Group}(h: SubGroup g): SubGroup g.
+  refine (makeSubGroup g (fun a => forall x, isIn h x <-> isIn h (a * x * invert a)) (ex_intro _ unit _) (fun a b => _)).
+  intro x.
+  rewrite inverseUnit.
+  rewrite (rightUnit g).
+  rewrite (leftUnit g).
+  reflexivity.
+  intros H1 H2 x.
+  rewrite inverseOp.
+  rewrite inverseId.
+  assert (H: a * (invert b * x * b) * invert a = a * invert b * x * (b * invert a)).
+  repeat rewrite <- (associative g). auto.
+  destruct H.
+  rewrite <- H1.
+  clear H1 a.
+  rewrite (H2 (invert b * x * b)).
+  assert (H: (b * invert b) * x * (b * invert b) = (b * (invert b * x * b) * invert b)).
+  repeat rewrite <- (associative g). auto.
+  destruct H.
+  rewrite (rightInverse g).
+  rewrite (rightUnit g).
+  rewrite (leftUnit g).
+  reflexivity.
+Defined.
+
+
 Definition generatedSubGroup{g: Group}(P: g -> Prop): SubGroup g.
   refine (subGroupCut { h: SubGroup g | forall a: g, P a -> isIn h a } (@proj1_sig _ _)).
 Defined.

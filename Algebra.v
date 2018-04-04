@@ -6,6 +6,8 @@
 
 Require Import ProofIrrelevance.
 Require Import EqdepFacts.
+Require Import RelationClasses.
+Require Import Morphisms.
 Require List.
 
 Delimit Scope group_scope with group.
@@ -440,6 +442,7 @@ Definition subSubGroup{g: Group}(h: SubGroup g)(k: SubGroup h): SubGroup g.
   apply (invertIsIn k); assumption.
 Defined.
 
+
 Definition subGroupCut{g: Group}(I: Type)(hi: I -> SubGroup g): SubGroup g.
   refine (makeSubGroup g (fun x => forall i, isIn (hi i) x) _ _).
   exists unit.
@@ -483,24 +486,91 @@ Definition image{g1 g2: Group}(f: GroupHom g1 g2): SubGroup g2.
 Defined.
 
 
-Definition centralizer(g: Group)(P: g -> Prop): SubGroup g.
-  refine (makeSubGroup g (fun a => forall x, P x -> a * x = x * a) (ex_intro _ unit _) (fun a b => _)).
-  intros x H.
+Definition konjugate{g: Group}(a x: g): g := a * x * invert a.
+
+Lemma konjugate_1{g: Group}(a x: g): konjugate a x = x <-> a * x = x * a.
+Proof.
+  unfold konjugate.
+  split; intro H; [
+    apply (rightInjection g (invert a)); rewrite H |
+    apply (rightInjection g a); rewrite H; f_equal
+  ];
+  rewrite (associative g); rewrite (rightInverse g); rewrite (rightUnit g); reflexivity.
+Qed.
+
+Lemma konjugateUnit1{g: Group}(a: g): konjugate unit a = a.
+Proof.
+  unfold konjugate.
+  rewrite (inverseUnit g).
   rewrite (rightUnit g).
   apply (leftUnit g).
-  intros H1 H2 x Hx.
-  rewrite <- (associative g).
-  rewrite <- (H1 x Hx).
-  repeat rewrite (associative g).
-  f_equal.
-  apply (rightInjection g b).
-  repeat rewrite (associative g).
-  rewrite <- (H2 x Hx).
-  rewrite <- (associative g).
+Qed.
+
+Lemma konjugateUnit2{g: Group}(a: g): konjugate a unit = unit.
+Proof.
+  unfold konjugate.
+  rewrite (rightUnit g).
+  rewrite (rightInverse g).
+  reflexivity.
+Qed.
+
+Lemma konjugateOp1{g: Group}(a b x: g): konjugate a (konjugate b x) = konjugate (a * b) x.
+Proof.
+  unfold konjugate.
+  rewrite (inverseOp g).
+  repeat rewrite <- (associative g).
+  reflexivity.
+Qed.
+
+Lemma konjugateOp2{g: Group}(a x y: g): konjugate a x * konjugate a y = konjugate a (x * y).
+Proof.
+  unfold konjugate.
+  transitivity (a * x * (invert a * a) * y * invert a).
+  repeat rewrite <- (associative g).
+  reflexivity.
   rewrite (leftInverse g).
   rewrite (rightUnit g).
-  apply (leftUnit g).
+  repeat rewrite <- (associative g).
+  reflexivity.
+Qed.
+
+Lemma konjugateInvert{g: Group}(a x: g): konjugate a (invert x) = invert (konjugate a x).
+Proof.
+  unfold konjugate.
+  repeat rewrite (inverseOp g).
+  rewrite (inverseId g).
+  apply (associative g).
+Qed.
+
+Lemma konjugateInjective{g: Group}(a x y: g): konjugate a x = konjugate a y -> x = y.
+Proof.
+  unfold konjugate.
+  intro H.
+  apply (leftInjection g a).
+  apply (rightInjection g (invert a)).
+  apply H.
+Qed.
+
+
+Definition centralizer(g: Group)(P: g -> Prop): SubGroup g.
+  refine (makeSubGroup g (fun a => forall x, P x -> konjugate a x = x) (ex_intro _ unit _) (fun a b => _)).
+  intros x H.
+  apply konjugateUnit1.
+  intros H1 H2 x Hx.
+  rewrite <- konjugateOp1.
+  rewrite <- H1; try assumption.
+  f_equal. clear H1 a.
+  rewrite <- (H2 x Hx) at 1.
+  rewrite konjugateOp1.
+  rewrite (leftInverse g).
+  apply konjugateUnit1.
 Defined.
+
+Lemma centralizer_1{g: Group}(P: g -> Prop):
+  forall(a: centralizer g P) x, P x -> konjugate (subGroupExtract _ a) x = x.
+Proof.
+  intros [a Pa]. apply Pa.
+Qed.
 
 Definition center(g: Group) := centralizer g (fun _ => True).
 
@@ -516,36 +586,49 @@ Qed.
 Lemma centerAbelian(g: Group): abelian (center g).
 Proof.
   intros [a Ha] [b Hb].
-  apply subGroupEmbedding.
-  simpl.
+  apply subGroupEmbedding; simpl.
+  rewrite <- konjugate_1.
   rewrite Ha; auto.
 Qed.
 
 
 Definition normalizer{g: Group}(h: SubGroup g): SubGroup g.
-  refine (makeSubGroup g (fun a => forall x, isIn h x <-> isIn h (a * x * invert a)) (ex_intro _ unit _) (fun a b => _)).
+  refine (makeSubGroup g (fun a => forall x, isIn h x <-> isIn h (konjugate a x)) (ex_intro _ unit _) (fun a b => _)).
   intro x.
-  rewrite inverseUnit.
-  rewrite (rightUnit g).
-  rewrite (leftUnit g).
+  rewrite konjugateUnit1.
   reflexivity.
   intros H1 H2 x.
-  rewrite inverseOp.
-  rewrite inverseId.
-  assert (H: a * (invert b * x * b) * invert a = a * invert b * x * (b * invert a)).
-  repeat rewrite <- (associative g). auto.
-  destruct H.
+  rewrite <- konjugateOp1.
   rewrite <- H1.
   clear H1 a.
-  rewrite (H2 (invert b * x * b)).
-  assert (H: (b * invert b) * x * (b * invert b) = (b * (invert b * x * b) * invert b)).
-  repeat rewrite <- (associative g). auto.
-  destruct H.
+  rewrite (H2 (konjugate (invert b) x)).
+  rewrite konjugateOp1.
   rewrite (rightInverse g).
-  rewrite (rightUnit g).
-  rewrite (leftUnit g).
+  rewrite konjugateUnit1.
   reflexivity.
 Defined.
+
+Lemma normalizer_1{g: Group}(h: SubGroup g): forall a x, isIn (normalizer h) a -> isIn h x <-> isIn h (konjugate a x).
+Proof.
+  simpl.
+  intros a x H. apply H.
+Qed.
+
+Lemma normalizer_2{g: Group}(h: SubGroup g): forall a, isIn h a -> isIn (normalizer h) a.
+Proof.
+  simpl.
+  intros a Ha x.
+  split; intro Hx.
+  repeat apply (opIsIn h); try apply (invertIsIn h); assumption.
+  rewrite <- konjugateUnit1.
+  rewrite <- (rightInverse g (invert a)).
+  rewrite inverseId.
+  rewrite <- konjugateOp1.
+  apply opIsIn.
+  apply opIsIn; try assumption.
+  apply invertIsIn; assumption.
+  repeat apply invertIsIn; assumption.
+Qed.
 
 
 Definition generatedSubGroup{g: Group}(P: g -> Prop): SubGroup g.
@@ -630,68 +713,73 @@ Qed.
 
 
 Definition konjugated{g: Group}(x y: g): Prop :=
-  ex (fun a => x = a * y * invert a).
+  ex (fun a => x = konjugate a y).
 
-Lemma konjugatedReflexive{g: Group}(x: g): konjugated x x.
+Lemma konjugatedReflexive{g: Group}: Reflexive (konjugated (g:=g)).
 Proof.
   exists unit.
-  rewrite (leftUnit g).
-  rewrite (inverseUnit g).
-  rewrite (rightUnit g).
-  auto.
+  rewrite konjugateUnit1.
+  reflexivity.
 Qed.
 
-Lemma konjugatedSymmetric{g: Group}(x y: g): konjugated x y -> konjugated y x.
+Lemma konjugatedSymmetric{g: Group}: Symmetric (konjugated (g:=g)).
 Proof.
-  intros [a H].
+  intros x y [a H].
   exists (invert a).
   rewrite H.
-  transitivity ((invert a * a) * y * (invert a * invert (invert a))).
-  rewrite (rightInverse g).
+  rewrite konjugateOp1.
   rewrite (leftInverse g).
-  rewrite (rightUnit g).
-  rewrite (leftUnit g).
-  auto.
-  repeat rewrite (associative g).
-  auto.
+  rewrite konjugateUnit1.
+  reflexivity.
 Qed.
 
-Lemma konjugatedTransitive{g: Group}(x y z: g): konjugated x y -> konjugated y z -> konjugated x z.
+Lemma konjugatedTransitive{g: Group}: Transitive (konjugated (g:=g)).
 Proof.
-  intros [a Ha] [b Hb].
+  intros x y z [a Ha] [b Hb].
   exists (a * b).
   rewrite Ha, Hb.
-  repeat rewrite (associative g).
-  repeat f_equal.
-  rewrite inverseOp.
-  auto.
+  apply konjugateOp1.
+Qed.
+
+Instance konjugatedEquiv{g: Group}: Equivalence (konjugated (g:=g)).
+Proof.
+  split; [apply konjugatedReflexive | apply konjugatedSymmetric | apply konjugatedTransitive].
 Qed.
 
 
 Definition automorphism{g: Group}(a: g): GroupHom g g.
-  exists (fun x => a * x * invert a).
+  exists (konjugate a).
   apply semiGroupHomIsGroupHom.
   intros x y.
-  repeat rewrite (associative g).
-  f_equal. f_equal.
-  rewrite <- (associative g).
-  rewrite (leftInverse g).
-  rewrite (leftUnit g).
+  rewrite konjugateOp2.
   reflexivity.
 Defined.
 
 
 Definition isNormal{g: Group}(h: SubGroup g): Prop :=
-  let (P, _, _) := h in forall x a, P (a * x * invert a) -> P x.
+  let (P, _, _) := h in forall x a, P (konjugate a x) -> P x.
+
+Lemma normal_1{g: Group}(h: SubGroup g): isNormal h -> forall x a, isIn h (konjugate a x) <-> isIn h x.
+Proof.
+  intro H1.
+  assert (H2: forall x a, isIn h (konjugate a x) -> isIn h x).
+  destruct h as [P H3 H4].
+  apply H1.
+  split; try apply H2.
+  intro H3.
+  apply (H2 _ (invert a)).
+  rewrite konjugateOp1.
+  rewrite (leftInverse g).
+  rewrite konjugateUnit1.
+  assumption.
+Qed.
+
 
 Lemma minimalIsNormal(g: Group): isNormal (minimalSubGroup g).
 Proof.
   intros x a H.
-  apply (leftInjection g a).
-  apply (rightInjection g (invert a)).
-  rewrite <- H.
-  rewrite (rightUnit g).
-  apply (rightInverse g).
+  rewrite <- (konjugateUnit2 a) in H.
+  apply (konjugateInjective _ _ _ H).
 Qed.
 
 Lemma maximalIsNormal(g: Group): isNormal (maximalSubGroup g).
@@ -705,6 +793,7 @@ Proof.
   destruct f as [f [[H1 H2] H3]]; simpl.
   unfold isSemiGroupHom in H1.
   intros x a H4.
+  unfold konjugate in H4.
   repeat rewrite H1 in H4.
   apply (leftInjection g2 (f a)).
   apply (rightInjection g2 (f (invert a))).
@@ -718,21 +807,22 @@ Qed.
 Lemma centerIsNormal(g: Group): isNormal (center g).
 Proof.
   intros x a Hx y _.
-  set (H := Hx (a * y * invert a) I).
-  repeat rewrite (associative g) in H.
+  set (H := Hx (konjugate a y) I).
+  unfold konjugate in H.
+  repeat rewrite (associative g) in H.  clear Hx.
   apply (leftInjection g) in H.
+  repeat rewrite inverseOp in H.
   repeat rewrite <- (associative g) in H.
   apply (rightInjection g) in H.
-  transitivity (x * invert a * a * y).
+  rewrite <- H at 2. clear H.
+  unfold konjugate.
   f_equal.
-  rewrite (associative g).
-  rewrite (leftInverse g).
-  rewrite (rightUnit g).
-  auto.
-  rewrite H.
+  repeat rewrite (associative g).
   f_equal.
-  rewrite (associative g).
-  rewrite (leftInverse g).
+  rewrite (rightInverse g).
   rewrite (rightUnit g).
-  auto.
+  rewrite <- (associative g).
+  rewrite (leftInverse g).
+  rewrite (leftUnit g).
+  reflexivity.
 Qed.

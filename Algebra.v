@@ -16,19 +16,15 @@ Delimit Scope group_scope with group.
 Local Open Scope group_scope.
 
 
-Record SemiGroupSig := {
+Record SemiGroupSig := makeSemiGroupSig {
   carrier:> Set;
   op: carrier -> carrier -> carrier
 }.
 
-Definition makeSemiGroupSig{X: Set}(op: X -> X -> X): SemiGroupSig :=
-  Build_SemiGroupSig X op.
-
+Arguments makeSemiGroupSig {carrier}.
 Arguments op {s}.
 
 Notation "x * y" := (op x y) : group_scope.
-
-
 
 Record SemiGroupAx(sig: SemiGroupSig) := {
   associative: forall x y z: sig, (x * y) * z = x * (y * z);
@@ -36,24 +32,19 @@ Record SemiGroupAx(sig: SemiGroupSig) := {
 
 Arguments associative {sig}.
 
-Definition SemiGroup := sig SemiGroupAx.
+Record SemiGroup := {
+  semiGroupSig:> SemiGroupSig;
+  semiGroupAx :> SemiGroupAx semiGroupSig
+}.
 
-Definition semiGroupSig: SemiGroup -> SemiGroupSig := @proj1_sig _ _.
-Coercion   semiGroupSig: SemiGroup >-> SemiGroupSig.
 
-Definition semiGroupAx: forall G: SemiGroup, SemiGroupAx G := @proj2_sig _ _.
-Coercion   semiGroupAx : SemiGroup >-> SemiGroupAx.
 
-Definition SemiGroupHom(h1 h2: SemiGroupSig) := { f: h1 -> h2 | forall x1 x2, f (x1 * x2) = f x1 * f x2 }.
+Record SemiGroupHom(h1 h2: SemiGroupSig) := makeSemiGroupHom {
+  semiGroupHomFun:> h1 -> h2;
+  isSemiGroupHom: forall x1 x2, semiGroupHomFun (x1 * x2) = semiGroupHomFun x1 * semiGroupHomFun x2
+}.
 
-Definition makeSemiGroupHom(h1 h2: SemiGroupSig):
-  forall(f: h1 -> h2), (forall x1 x2, f (x1 * x2) = f x1 * f x2) -> SemiGroupHom h1 h2 := @exist _ _.
-
-Definition semiGroupHomFun{h1 h2} : SemiGroupHom h1 h2 -> h1 -> h2 := @proj1_sig _ _.
-Coercion   semiGroupHomFun: SemiGroupHom >-> Funclass.
-
-Definition isSemiGroupHom{h1 h2: SemiGroupSig}: forall(f: SemiGroupHom h1 h2) x1 x2, f (x1 * x2) = f x1 * f x2 :=
-  @proj2_sig _ _.
+Arguments isSemiGroupHom {h1 h2}.
 
 
 Definition abelian(h: SemiGroupSig) := forall a b: h, a * b = b * a.
@@ -67,38 +58,38 @@ Record MonoidSig := {
   unit: monoidSigIsSemiGroup;
 }.
 
+Arguments unit {m}.
+
 Definition makeMonoidSig{X: Set}(op: X -> X -> X)(unit: X): MonoidSig :=
   Build_MonoidSig (makeSemiGroupSig op) unit.
 
-Arguments unit {m}.
-
 Record MonoidAx(sig: MonoidSig) := {
   monoidIsSemiGroupAx:> SemiGroupAx sig;
-  leftUnit:     forall x: sig, unit * x = x;
-  rightUnit:    forall x: sig, x * unit = x
+  leftUnit:  forall x: sig, unit * x = x;
+  rightUnit: forall x: sig, x * unit = x
 }.
 
 Arguments leftUnit {sig}.
 Arguments rightUnit {sig}.
 
-Definition Monoid := sig MonoidAx.
+Record Monoid := {
+  monoidSig:> MonoidSig;
+  monoidAx :> MonoidAx monoidSig
+}.
 
-Definition monoidSig: Monoid -> MonoidSig := @proj1_sig _ _.
-Coercion   monoidSig: Monoid >-> MonoidSig.
 
-Definition monoidAx: forall M: Monoid, MonoidAx M := @proj2_sig _ _.
-Coercion   monoidAx : Monoid >-> MonoidAx.
+Record MonoidHom(m1 m2: MonoidSig) := {
+  monoidHomIsSemiGroupHom:> SemiGroupHom m1 m2;
+  isMonoidHom: monoidHomIsSemiGroupHom unit = unit
+}.
 
-Definition MonoidHom(m1 m2: MonoidSig) := { f: SemiGroupHom m1 m2 | f unit = unit }.
+Arguments isMonoidHom {m1 m2}.
 
-Definition makeMonoidHom(m1 m2: MonoidSig):
-  forall(f: SemiGroupHom m1 m2), f unit = unit -> MonoidHom m1 m2 := @exist _ _.
-
-Definition monoidHomIsSemiGroupHom{m1 m2} : MonoidHom m1 m2 -> SemiGroupHom m1 m2 := @proj1_sig _ _.
-Coercion   monoidHomIsSemiGroupHom: MonoidHom >-> SemiGroupHom.
-
-Definition isMonoidHom{m1 m2: MonoidSig}: forall(f: MonoidHom m1 m2), f unit = unit :=
-  @proj2_sig _ _.
+Definition makeMonoidHom{m1 m2: MonoidSig}(f: m1 -> m2):
+    (forall x1 x2, f (x1 * x2) = f x1 * f x2) ->
+    f unit = unit ->
+    MonoidHom m1 m2 :=
+  fun H1 => Build_MonoidHom m1 m2 (makeSemiGroupHom m1 m2 f H1).
 
 
 Lemma unitUnique(m: Monoid): forall e: m, (forall x, x * e = x) -> e = unit.
@@ -117,11 +108,10 @@ Record GroupSig := {
   invert: groupSigIsMonoidSig -> groupSigIsMonoidSig
 }.
 
+Arguments invert {g}.
+
 Definition makeGroupSig{X: Set}(op: X -> X -> X)(unit: X)(invert: X -> X): GroupSig :=
   Build_GroupSig (makeMonoidSig op unit) invert.
-
-
-Arguments invert {g}.
 
 Record GroupAx(sig: GroupSig) := {
   groupIsMonoidAx:> MonoidAx sig;
@@ -132,24 +122,25 @@ Record GroupAx(sig: GroupSig) := {
 Arguments leftInverse {sig}.
 Arguments rightInverse {sig}.
 
-Definition Group := sig GroupAx.
+Record Group := {
+  groupSig:> GroupSig;
+  groupAx :> GroupAx groupSig
+}.
 
-Definition groupSig: Group -> GroupSig := @proj1_sig _ _.
-Coercion   groupSig: Group >-> GroupSig.
 
-Definition groupAx: forall g: Group, GroupAx g := @proj2_sig _ _.
-Coercion   groupAx : Group >-> GroupAx.
+Record GroupHom(g1 g2: GroupSig) := {
+  groupHomIsMonoidHom:> MonoidHom g1 g2;
+  isGroupHom: forall x, invert (groupHomIsMonoidHom x) = groupHomIsMonoidHom (invert x)
+}.
 
-Definition GroupHom(g1 g2: GroupSig) := { f: MonoidHom g1 g2 | forall x, invert (f x) = f (invert x) }.
+Arguments isGroupHom {g1 g2}.
 
-Definition makeGroupHom(g1 g2: GroupSig):
-  forall(f: MonoidHom g1 g2), (forall x, invert (f x) = f (invert x)) -> GroupHom g1 g2 := @exist _ _.
-
-Definition groupHomIsMonoidHom{g1 g2}: GroupHom g1 g2 -> MonoidHom g1 g2 := @proj1_sig _ _.
-Coercion   groupHomIsMonoidHom: GroupHom >-> MonoidHom.
-
-Definition isGroupHom{g1 g2: GroupSig}: forall(f: GroupHom g1 g2), forall x, invert (f x) = f (invert x) :=
-  @proj2_sig _ _.
+Definition makeGroupHom{g1 g2: GroupSig}(f: g1 -> g2):
+    (forall x1 x2, f (x1 * x2) = f x1 * f x2) ->
+    f unit = unit ->
+    (forall x, invert (f x) = f (invert x)) ->
+    GroupHom g1 g2 :=
+  fun H1 H2 => Build_GroupHom g1 g2 (makeMonoidHom f H1 H2).
 
 
 Lemma makeGroupAx(sig: GroupSig):
@@ -257,7 +248,7 @@ Definition groupFromSemigroup(h: SemiGroup):
   intros b H1 H2.
   destruct (H2 b b) as [e He].
   set (inv y := proj1_sig (H2 y e)).
-  exists (Build_GroupSig (Build_MonoidSig _ e) inv).
+  exists (makeGroupSig op e inv).
   apply makeGroupAx; simpl.
   apply (associative h).
   intro a.
@@ -273,30 +264,30 @@ Definition groupFromSemigroup(h: SemiGroup):
 Defined.
 
 
-Definition makeGroupHom2(g1 g2: Group): SemiGroupHom g1 g2 -> GroupHom g1 g2.
-Proof.
-  intro f.
-  set (H1 := isSemiGroupHom f).
+Definition makeGroupHom2(g1 g2: Group)(f: g1 -> g2): (forall x1 x2, f (x1 * x2) = f x1 * f x2) -> GroupHom g1 g2.
+  intro H1.
   assert (H2: f unit = unit).
   apply (unitUnique2 _ (f unit)).
   rewrite <- H1. f_equal. apply (rightUnit g1).
-  refine (makeGroupHom _ _ (makeMonoidHom _ _ f H2) _). simpl.
+  refine (makeGroupHom f H1 H2 _).
   intro x.
   symmetry. apply inverseUnique.
   rewrite <- H1.
   rewrite (rightInverse g1).
   assumption.
-Qed.
+Defined.
+
+Definition groupHomId{g: Group}: GroupHom g g := makeGroupHom2 g g (fun a => a) (fun x y => eq_refl).
 
 Definition groupHomComp{g1 g2 g3: Group}: GroupHom g2 g3 -> GroupHom g1 g2 -> GroupHom g1 g3.
   intros g f.
-  apply makeGroupHom2.
-  exists (fun a => g (f a)).
+  apply (makeGroupHom2 _ _ (fun a => g (f a))).
   intros x y.
   rewrite (isSemiGroupHom f).
   rewrite (isSemiGroupHom g).
   reflexivity.
 Defined.
+
 
 Lemma groupAxFromHom{g1: GroupSig}{g2: Group}(f: GroupHom g1 g2): (forall x y, f x = f y -> x = y) -> GroupAx g1.
 Proof.
@@ -362,13 +353,11 @@ Definition subGroupInsert{g: Group}(h: SubGroup g): forall x, isIn h x -> subGro
 
 Definition subGroupExtract{g: Group}(h: SubGroup g): GroupHom (subGroupSig h) g.
   set (k := subGroupSig h).
-  refine (makeGroupHom k g (makeMonoidHom k g (makeSemiGroupHom k g (@proj1_sig _ _) _) _) _).
-  simpl.
-  intros [x Hx]; simpl.
-  reflexivity.
-  Unshelve.
+  apply (makeGroupHom (g1:=k) (g2:=g) (@proj1_sig _ _)); simpl.
   intros [x Hx] [y Hy]; simpl.
   reflexivity.
+  reflexivity.
+  intros [x Hx]; simpl.
   reflexivity.
 Defined.
 
@@ -417,13 +406,11 @@ Proof.
   apply (groupAxFromHom _ (subGroupEmbedding _)).
 Qed.
 
-Definition subGroup{g: Group}(h: SubGroup g): Group := exist _ _ (subGroupAx h).
-
-Coercion subGroup: SubGroup >-> Group.
-
+Definition subGroup{g: Group}(h: SubGroup g): Group := Build_Group _ (subGroupAx h).
+Coercion   subGroup: SubGroup >-> Group.
 
 
-Definition subSubGroup{g: Group}(h: SubGroup g)(k: SubGroup h): SubGroup g.
+Definition subSubGroup_1{g: Group}(h: SubGroup g)(k: SubGroup h): SubGroup g.
   refine (makeSubGroup g (fun x => ex (fun H => isIn k (subGroupInsert h x H))) _ _).
   exists unit.
   exists (unitIsIn h).
@@ -435,6 +422,15 @@ Definition subSubGroup{g: Group}(h: SubGroup g)(k: SubGroup h): SubGroup g.
   rewrite (subGroupInsertInvert _ _ (invertIsIn _ _ Hb1) Hb1).
   apply (opIsIn k); try assumption.
   apply (invertIsIn k); assumption.
+Defined.
+
+Definition subSubGroup_2{g: Group}(h k: SubGroup g): (forall a, isIn h a -> isIn k a) -> SubGroup k.
+  destruct h as [P H1 H2]. simpl.
+  intro H3.
+  refine (makeSubGroup k (fun x => P (subGroupExtract k x)) _ _).
+  destruct H1 as [a Pa]. exists (subGroupInsert k _ (H3 _ Pa)).
+  rewrite subGroupInOut. assumption.
+  intros [a Pa] [b Pb]. apply H2.
 Defined.
 
 
@@ -742,8 +738,7 @@ Qed.
 
 
 Definition innerAutomorphism{g: Group}(a: g): GroupHom g g.
-  apply makeGroupHom2.
-  exists (konjugate a).
+  apply (makeGroupHom2 _ _ (konjugate a)).
   intros x y.
   rewrite konjugateOp2.
   reflexivity.
@@ -819,6 +814,13 @@ Proof.
   rewrite (leftInverse g).
   rewrite (leftUnit g).
   reflexivity.
+Qed.
+
+Lemma isNormalInNormalizer(g: Group)(h: SubGroup g): isNormal (subSubGroup_2 h (normalizer h) (normalizer_2 h)).
+Proof.
+  destruct h as [P H1 H2]. simpl.
+  intros [x Hx] [a Ha]. simpl.
+  apply Ha.
 Qed.
 
 

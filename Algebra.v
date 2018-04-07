@@ -17,7 +17,7 @@ Local Open Scope group_scope.
 
 
 Record SemiGroupSig := {
-  carrier: Set;
+  carrier:> Set;
   op: carrier -> carrier -> carrier
 }.
 
@@ -29,8 +29,6 @@ Arguments op {s}.
 Notation "x * y" := (op x y) : group_scope.
 
 
-
-Coercion carrier: SemiGroupSig >-> Sortclass.
 
 Record SemiGroupAx(sig: SemiGroupSig) := {
   associative: forall x y z: sig, (x * y) * z = x * (y * z);
@@ -65,7 +63,7 @@ Definition abelian(h: SemiGroupSig) := forall a b: h, a * b = b * a.
 
 
 Record MonoidSig := {
-  monoidSigIsSemiGroup: SemiGroupSig;
+  monoidSigIsSemiGroup:> SemiGroupSig;
   unit: monoidSigIsSemiGroup;
 }.
 
@@ -74,18 +72,14 @@ Definition makeMonoidSig{X: Set}(op: X -> X -> X)(unit: X): MonoidSig :=
 
 Arguments unit {m}.
 
-Coercion monoidSigIsSemiGroup: MonoidSig >-> SemiGroupSig.
-
 Record MonoidAx(sig: MonoidSig) := {
-  monoidIsSemiGroupAx: SemiGroupAx sig;
+  monoidIsSemiGroupAx:> SemiGroupAx sig;
   leftUnit:     forall x: sig, unit * x = x;
   rightUnit:    forall x: sig, x * unit = x
 }.
 
 Arguments leftUnit {sig}.
 Arguments rightUnit {sig}.
-
-Coercion monoidIsSemiGroupAx: MonoidAx >-> SemiGroupAx.
 
 Definition Monoid := sig MonoidAx.
 
@@ -119,7 +113,7 @@ Qed.
 
 
 Record GroupSig := {
-  groupSigIsMonoidSig: MonoidSig;
+  groupSigIsMonoidSig:> MonoidSig;
   invert: groupSigIsMonoidSig -> groupSigIsMonoidSig
 }.
 
@@ -129,18 +123,14 @@ Definition makeGroupSig{X: Set}(op: X -> X -> X)(unit: X)(invert: X -> X): Group
 
 Arguments invert {g}.
 
-Coercion groupSigIsMonoidSig: GroupSig >-> MonoidSig.
-
 Record GroupAx(sig: GroupSig) := {
-  groupIsMonoidAx: MonoidAx sig;
+  groupIsMonoidAx:> MonoidAx sig;
   leftInverse:  forall x: sig, invert x * x = unit;
   rightInverse: forall x: sig, x * invert x = unit
 }.
 
 Arguments leftInverse {sig}.
 Arguments rightInverse {sig}.
-
-Coercion groupIsMonoidAx: GroupAx >-> MonoidAx.
 
 Definition Group := sig GroupAx.
 

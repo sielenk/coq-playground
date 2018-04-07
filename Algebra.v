@@ -8,6 +8,8 @@ Require Import ProofIrrelevance.
 Require Import EqdepFacts.
 Require Import RelationClasses.
 Require Import Morphisms.
+Require Import FunctionalExtensionality.
+Require Import ProofIrrelevance.
 Require List.
 
 Delimit Scope group_scope with group.
@@ -828,3 +830,82 @@ Proof.
   rewrite (leftUnit g).
   reflexivity.
 Qed.
+
+
+Inductive aut(g: Group) := makeAut (u: GroupHom g g)(v: GroupHom g g): injective u -> (forall a, u (v a) = a) -> aut g.
+
+Definition aut2hom{g}(f: aut g): GroupHom g g := let (f', _, _, _) := f in f'.
+Coercion   aut2hom: aut >-> GroupHom.
+
+Definition autId{g}: aut g.
+  refine (makeAut _ groupHomId groupHomId _ _).
+  intros b1 b2 H3. apply H3.
+  intros a. reflexivity.
+Defined.
+
+Definition autComp{g}(f1 f2: aut g): aut g.
+  refine (match f1, f2 with
+          | makeAut _ f1 f1' H1 H2, makeAut _ f2 f2' H3 H4 =>
+              makeAut _ (groupHomComp f1 f2) (groupHomComp f2' f1') _ _
+          end).
+  intros a1 a2 H5.
+  apply H3.
+  apply H1.
+  apply H5. simpl.
+  intro c.
+  rewrite H4.
+  apply H2.
+Defined.
+
+Definition autInvert{g}(f: aut g): aut g.
+  refine (match f with makeAut _ f f' H1 H2 => makeAut _ f' f _ _ end).
+  intros b1 b2 H3.
+  rewrite <- (H2 b1).
+  rewrite <- (H2 b2).
+  rewrite H3.
+  reflexivity.
+  intros a.
+  apply H1.
+  apply H2.
+Defined.
+
+Definition autEq{g}(f1 f2: aut g): (forall x, f1 x = f2 x) -> f1 = f2.
+  destruct f1 as [[[[f1 H1] H2] H3] [[[f1' H4] H5] H6] H7 H8].
+  destruct f2 as [[[[f2 H9] Ha] Hb] [[[f2' Hc] Hd] He] Hf Hg].
+  simpl in * |- *.
+  intro Hh.
+  assert (Hi: f1 = f2).
+  apply (functional_extensionality f1 f2 Hh).
+  assert (Hj: f1' = f2').
+  apply (functional_extensionality f1' f2').
+  intro x.
+  apply Hf.
+  rewrite Hg.
+  rewrite <- Hi.
+  apply H8.
+  subst.
+  rewrite (proof_irrelevance _ H1 H9).
+  rewrite (proof_irrelevance _ H2 Ha).
+  rewrite (proof_irrelevance _ H3 Hb).
+  rewrite (proof_irrelevance _ H4 Hc).
+  rewrite (proof_irrelevance _ H5 Hd).
+  rewrite (proof_irrelevance _ H6 He).
+  rewrite (proof_irrelevance _ H7 Hf).
+  rewrite (proof_irrelevance _ H8 Hg).
+  reflexivity.
+Defined.
+
+
+Definition AutSig(g: Group): GroupSig := makeGroupSig (X := aut g) autComp autId autInvert.
+
+Definition Aut(g: Group): Group.
+  exists (AutSig g).
+  apply makeGroupAx; intros; apply autEq; simpl.
+  destruct x, y, z; reflexivity.
+  destruct x; reflexivity.
+  destruct x.
+  intro a. simpl.
+  apply i.
+  rewrite e.
+  reflexivity.
+Defined.

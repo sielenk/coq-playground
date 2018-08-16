@@ -70,7 +70,7 @@ Lemma catEq(A B: Cat):
       (eqHom: forall X Y, Hom X Y = Hom (eqF eqOb X) (eqF eqOb Y)),
       (forall X, eqF (eqHom X X) (id X) = id (eqF eqOb X)) ->
       (forall X Y Z f g,
-      eqF (eqHom X Z) (comp f g) = comp (eqF (eqHom Y Z) f) (eqF (eqHom X Y) g)) ->
+        eqF (eqHom X Z) (comp f g) = comp (eqF (eqHom Y Z) f) (eqF (eqHom X Y) g)) ->
       A = B.
 Proof.
   destruct A, B. simpl.
@@ -309,6 +309,7 @@ Definition CatTwo: Cat.
 Defined.
 
 
+
 Definition FunA: Fun CatOne CatTwo.
   apply (Build_Fun CatOne CatTwo
     (fun _ => Zero)
@@ -335,8 +336,8 @@ Definition xxFmap1(X: Ob CatTwo): Ob (FUN CatOne CatTwo) :=
 
 Definition xxFmap2(X Y: Ob CatTwo)(f: Hom X Y): Hom (xxFmap1 X) (xxFmap1 Y) :=
   match f in (twoHom X' Y') return (Hom (xxFmap1 X') (xxFmap1 Y')) with
-  | IdZero => funId CatOne CatTwo FunA
-  | IdOne => funId CatOne CatTwo FunB
+  | IdZero  => funId CatOne CatTwo FunA
+  | IdOne   => funId CatOne CatTwo FunB
   | ZeroOne => NatAB
   end.
 

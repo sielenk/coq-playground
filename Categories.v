@@ -180,8 +180,29 @@ Section Foo.
 End Foo.
 
 
+Definition SET: Cat.
+  refine (Build_Cat Type (fun X Y => X -> Y) (fun X x => x) (fun X Y Z g f x => g (f x)) _ _ _); intros;
+  extensionality x; reflexivity.
+Defined.
 
+Definition HomFun{A: Cat}(X: Ob A): Fun A SET.
+  refine (Build_Fun A SET (Hom X) (fun X Y => comp) _ _);
+  intros; extensionality h; simpl.
+  rewrite ident_l. reflexivity.
+  apply assoc.
+Defined.
 
+Definition yoneda1{A: Cat}(F: Fun A SET)(X: Ob A): fmap1 F X -> Nat (HomFun X) F.
+  refine ((fun u => Build_Nat A SET (HomFun X) F (fun Y f => fmap2 F f u) _)).
+  simpl.
+  intros Y Z f.
+  extensionality g.
+  rewrite fmap_comp.
+  reflexivity.
+Defined.
+
+Definition yoneda2{A: Cat}(F: Fun A SET)(X: Ob A): Nat (HomFun X) F -> fmap1 F X :=
+  fun N => eta N X (id X).
 
 
 Inductive oneOb := UnitOb.

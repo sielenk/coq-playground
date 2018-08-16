@@ -154,27 +154,30 @@ Qed.
 
 
 Definition catId A: Fun A A.
-  apply (Build_Fun _ _ (fun X => X) (fun _ _ f => f)); reflexivity.
+  refine ({| fmap1 X := X; fmap2 _ _ f := f |}); reflexivity.
 Defined.
 
 Definition catComp A B C (F: Fun B C)(G: Fun A B): Fun A C.
-  apply (Build_Fun _ _
-    (fun X => fmap1 F (fmap1 G X))
-    (fun _ _ f => fmap2 F (fmap2 G f))).
+  refine ({| fmap1 X := fmap1 F (fmap1 G X); fmap2 _ _ f := fmap2 F (fmap2 G f) |}).
+
   intros. repeat rewrite fmap_id. reflexivity.
+
   intros. repeat rewrite fmap_comp. reflexivity.
 Defined.
 
 Definition CAT: Cat.
-  apply (Build_Cat Cat Fun catId catComp).
+  refine ({| id := catId; comp := catComp |}).
+
   intros A B F. refine (funEq _ _ _ _).
   intros X Y f.
   rewrite (proof_irrelevance _ _ (eq_refl _)).
   reflexivity.
+
   intros A B F. refine (funEq _ _ _ _).
   intros X Y f.
   rewrite (proof_irrelevance _ _ (eq_refl _)).
   reflexivity.
+
   intros A B C D F G H. refine (funEq _ _ _ _).
   intros X Y f.
   rewrite (proof_irrelevance _ _ (eq_refl _)).
@@ -189,7 +192,8 @@ Section Foo.
   Variable A B: Cat.
 
   Definition funId(F: Fun A B): Nat F F.
-    apply (Build_Nat A B F F (fun X => id _)).
+    refine ({| eta X := id (fmap1 F X) |}).
+
     intros.
     rewrite ident_r.
     rewrite ident_l.
@@ -197,7 +201,8 @@ Section Foo.
   Defined.
 
   Definition funComp(F G H: Fun A B)(N: Nat G H)(M: Nat F G): Nat F H.
-    apply (Build_Nat A B F H (fun X => comp (eta N X) (eta M X))).
+    refine ({| eta X := comp (eta N X) (eta M X) |}).
+
     intros.
     rewrite assoc.
     rewrite <- eta_ax.
@@ -207,13 +212,16 @@ Section Foo.
   Defined.
 
   Definition FUN: Cat.
-    apply (Build_Cat (Fun A B) Nat funId funComp).
+    refine ({| id := funId; comp := funComp |}).
+
     intros F G N. refine (natEq _ _ _).
     intro X. simpl.
     rewrite ident_r. reflexivity.
+
     intros F G N. refine (natEq _ _ _).
     intro X. simpl.
     rewrite ident_l. reflexivity.
+
     intros F G H I N M O. refine (natEq _ _ _).
     intro X. simpl.
     symmetry. apply assoc.
@@ -221,20 +229,22 @@ Section Foo.
 End Foo.
 
 
+
+
 Definition SET: Cat.
-  refine (Build_Cat Type (fun X Y => X -> Y) (fun X x => x) (fun X Y Z g f x => g (f x)) _ _ _); intros;
+  refine ({| Ob := Type; Hom X Y := X -> Y; id X x := x; comp X Y Z g f x := g (f x) |}); intros;
   extensionality x; reflexivity.
 Defined.
 
 Definition HomFun{A: Cat}(X: Ob A): Fun A SET.
-  refine (Build_Fun A SET (Hom X) (fun X Y => comp) _ _);
+  refine (Build_Fun A SET (Hom X) (fun _ _ => comp) _ _);
   intros; extensionality h; simpl.
   rewrite ident_l. reflexivity.
   apply assoc.
 Defined.
 
-Definition yoneda1{A: Cat}(F: Fun A SET)(X: Ob A): fmap1 F X -> Nat (HomFun X) F.
-  refine ((fun u => Build_Nat A SET (HomFun X) F (fun Y f => fmap2 F f u) _)).
+Definition yoneda1{A: Cat}(F: Fun A SET)(X: Ob A)(u: fmap1 F X): Nat (HomFun X) F.
+  refine (Build_Nat A SET (HomFun X) F (fun Y f => fmap2 F f u) _).
   simpl.
   intros Y Z f.
   extensionality g.
@@ -242,8 +252,7 @@ Definition yoneda1{A: Cat}(F: Fun A SET)(X: Ob A): fmap1 F X -> Nat (HomFun X) F
   reflexivity.
 Defined.
 
-Definition yoneda2{A: Cat}(F: Fun A SET)(X: Ob A): Nat (HomFun X) F -> fmap1 F X :=
-  fun N => eta N X (id X).
+Definition yoneda2{A: Cat}(F: Fun A SET)(X: Ob A)(N: Nat (HomFun X) F): fmap1 F X := eta N X (id X).
 
 
 Inductive oneOb := UnitOb.

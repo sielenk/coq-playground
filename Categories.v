@@ -160,6 +160,27 @@ Definition op(A: Cat): Cat.
 Defined.
 
 
+Definition prod(A B: Cat): Cat.
+  refine ({|
+    Ob := Ob A * Ob B;
+    Hom X Y := prod (Hom (fst X) (fst Y)) (Hom (snd X) (snd Y));
+    id X := (id (fst X), id (snd X));
+    comp _ _ _ g f := (comp (fst g) (fst f), comp (snd g) (snd f)) |});
+  intros; simpl.
+  repeat rewrite ident_r. destruct f. reflexivity.
+  repeat rewrite ident_l. destruct f. reflexivity.
+  repeat rewrite assoc. reflexivity.
+Defined.
+
+Definition first{A B}: Fun (prod A B) A.
+  apply (Build_Fun (prod A B) A fst (fun _ _ => fst)); reflexivity.
+Defined.
+
+Definition second{A B}: Fun (prod A B) B.
+  apply (Build_Fun (prod A B) B snd (fun _ _ => snd)); reflexivity.
+Defined.
+
+
 Definition catId A: Fun A A.
   refine ({| fmap1 X := X; fmap2 _ _ f := f |}); reflexivity.
 Defined.

@@ -23,6 +23,47 @@ Arguments Hom {c}.
 Arguments id  {c}.
 Arguments comp{c X Y Z}.
 
+Inductive eqHom{A: Cat}{X Y: Ob A}(f: Hom X Y): forall{X' Y': Ob A}, Hom X' Y' -> Prop :=
+  eqHom_refl: eqHom f f.
+
+Lemma eqHom_sym{A: Cat}{X Y: Ob A}{f: Hom X Y}{X' Y': Ob A}{f': Hom X' Y'}: eqHom f f' -> eqHom f' f.
+Proof.
+  intros [].
+  apply eqHom_refl.
+Qed.
+
+Lemma eqHom_trans{A: Cat}{X Y: Ob A}{f: Hom X Y}{X' Y': Ob A}{f': Hom X' Y'}{X'' Y'': Ob A}{f'': Hom X' Y'}:
+    eqHom f f' -> eqHom f' f'' -> eqHom f f''.
+Proof.
+  intros [] H. assumption.
+Qed.
+
+
+Lemma eq_eqHom{A: Cat}{X Y: Ob A}{f f': Hom X Y}: f = f' -> eqHom f f'.
+Proof.
+  intros [].
+  constructor.
+Qed.
+
+Lemma eqHom_eq{A: Cat}{X Y: Ob A}(f f': Hom X Y): eqHom f f' -> f = f'.
+Proof.
+  intro H1.
+  set (X' := X).
+  set (Y' := Y).
+  change (Hom X' Y') in f'.
+  change (@eqHom A X Y f X' Y' f') in H1.
+  set (H2 := eq_refl _ : Hom X Y = Hom X' Y').
+  transitivity (eqF H2 f).
+  reflexivity.
+  generalize dependent H2.
+  generalize dependent Y'.
+  generalize dependent X'.
+  intros X' Y' f' [] H.
+  rewrite (proof_irrelevance _ _ (eq_refl _)).
+  reflexivity.
+Qed.
+
+
 Lemma catEq(A B: Cat):
     forall
       (eqOb: Ob A = Ob B)

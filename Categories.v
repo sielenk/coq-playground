@@ -152,6 +152,13 @@ Proof.
 Qed.
 
 
+Definition op(A: Cat): Cat.
+  refine ({| Ob := Ob A; Hom X Y := Hom Y X; id X := id X; comp _ _ _ g f := comp f g |}); intros.
+  apply ident_l.
+  apply ident_r.
+  symmetry. apply assoc.
+Defined.
+
 
 Definition catId A: Fun A A.
   refine ({| fmap1 X := X; fmap2 _ _ f := f |}); reflexivity.

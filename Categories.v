@@ -71,6 +71,52 @@ Definition balanced(A: CatSig): Prop :=
 
 
 
+Polymorphic Definition FullSubcatSig(A: CatSig)(P: Ob A -> Prop): CatSig := {|
+  Ob             := sig P;
+  Hom X Y        := Hom (proj1_sig X) (proj1_sig Y);
+  id X           := id (proj1_sig X);
+  comp X Y Z f g := comp (c := A) f g
+|}.
+
+Polymorphic Definition FullSubcat(A: Cat)(P: Ob A -> Prop): Cat.
+  refine {| catSig := FullSubcatSig A P |}.
+  constructor; simpl; intros.
+  apply (ident_r A).
+  apply (ident_l A).
+  apply (assoc A).
+Defined.
+
+
+Polymorphic Definition HomSubcatSig
+    (A: CatSig)
+    (P: forall (X Y: Ob A), Hom X Y -> Prop)
+    (H1: forall X, P X X (id X))
+    (H2: forall X Y Z f g, P Y Z f -> P X Y g -> P X Z (comp f g)): CatSig := {|
+  Ob             := Ob A;
+  Hom X Y        := sig (P X Y);
+  id X           := exist (P X X) (id X) (H1 X);
+  comp X Y Z f g := exist (P X Z) _ (H2 X Y Z _ _ (proj2_sig f) (proj2_sig g))
+|}.
+
+Polymorphic Definition HomSubcat(A: Cat)(P: forall (X Y: Ob A), Hom X Y -> Prop)
+  (H1: forall X, P X X (id X))
+  (H2: forall X Y Z f g, P Y Z f -> P X Y g -> P X Z (comp f g)): Cat.
+  refine {| catSig := HomSubcatSig A P H1 H2 |}.
+  constructor; simpl; intros.
+  destruct f as [f H3].
+  refine (eq_sig_uncurried _ _ _). simpl.
+  exists (ident_r A _).
+  apply proof_irrelevance.
+  destruct f as [f H3].
+  refine (eq_sig_uncurried _ _ _). simpl.
+  exists (ident_l A _).
+  apply proof_irrelevance.
+  refine (eq_sig_uncurried _ _ _). simpl.
+  exists (assoc A _ _ _).
+  apply proof_irrelevance.
+Defined.
+
+
 Polymorphic Cumulative Inductive eqHom@{i j}{A: Cat@{i j}}{X Y: Ob A}(f: Hom X Y): forall{X' Y': Ob A}, Hom X' Y' -> Prop :=
   eqHom_refl: eqHom f f.
 

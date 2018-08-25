@@ -520,21 +520,21 @@ Definition twoId(X: twoOb): twoHom X X :=
   end.
 
 Definition twoComp X Y Z (f: twoHom Y Z)(g: twoHom X Y): twoHom X Z.
-  assert (Zero <> One).
-  intro H.
-  inversion H.
-  refine (
+  assert (H1: Zero <> One).
+  intro H. inversion H.
+  assert (H2: One <> Zero).
+  intro H. apply H1. symmetry. assumption.
+  exact (
     sumor_rec (fun _ => twoHom X Z) (fun gf => gf) (fun H => False_rec _ (H (eq_refl _)))
       match f in twoHom Yf Z', g in twoHom X' Yg return twoHom X' Z' + {Yf <> Yg} with
       | IdZero,  IdZero  => inleft IdZero
       | IdOne,   IdOne   => inleft IdOne
       | ZeroOne, IdZero  => inleft ZeroOne
       | IdOne,   ZeroOne => inleft ZeroOne
-      | IdOne,   IdZero  => inright _
-      | _,       _       => inright H
+      | IdOne,   IdZero  => inright H2
+      | _,       _       => inright H1
       end
   ).
-  intro H'. apply H. symmetry. assumption.
 Defined.
 
 Definition CatTwoSig: CatSig@{Set Set} := {|

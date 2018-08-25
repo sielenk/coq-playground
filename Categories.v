@@ -117,16 +117,26 @@ Polymorphic Definition HomSubcat(A: Cat)(P: forall (X Y: Ob A), Hom X Y -> Prop)
 Defined.
 
 
-Polymorphic Cumulative Inductive eqHom@{i j}{A: Cat@{i j}}{X Y: Ob A}(f: Hom X Y): forall{X' Y': Ob A}, Hom X' Y' -> Prop :=
+Definition comp'{A: CatSig}{X Y Y' Z: Ob A}(H: Y = Y'): Hom Y' Z -> Hom X Y -> Hom X Z :=
+  match H with eq_refl => comp end.
+
+Lemma eq_comp_comp'{A: CatSig}{X Y Z: Ob A}(f: Hom Y Z)(g: Hom X Y): comp f g = comp' (eq_refl Y) f g.
+Proof.
+  simpl.
+  reflexivity.
+Qed.
+
+
+Polymorphic Cumulative Inductive eqHom@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): forall{X' Y': Ob A}, Hom X' Y' -> Prop :=
   eqHom_refl: eqHom f f.
 
-Polymorphic Definition eqHom_sym@{i j}{A: Cat@{i j}}{X Y: Ob A}(f: Hom X Y){X' Y': Ob A}(f': Hom X' Y'):
+Polymorphic Definition eqHom_sym@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y){X' Y': Ob A}(f': Hom X' Y'):
   eqHom f f' -> eqHom f' f.
   intros [].
   constructor.
 Defined.
 
-Polymorphic Definition eqHom_trans@{i j}{A: Cat@{i j}}
+Polymorphic Definition eqHom_trans@{i j}{A: CatSig@{i j}}
   {X1 Y1: Ob A}(f1: Hom X1 Y1)
   {X2 Y2: Ob A}(f2: Hom X2 Y2)
   {X3 Y3: Ob A}(f3: Hom X3 Y3):
@@ -134,12 +144,13 @@ Polymorphic Definition eqHom_trans@{i j}{A: Cat@{i j}}
   intros [] H. exact H.
 Defined.
 
-Polymorphic Definition eq_eqHom@{i j}{A: Cat@{i j}}{X Y: Ob A}(f f': Hom X Y): f = f' -> eqHom f f'.
+
+Polymorphic Definition eq_eqHom@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f f': Hom X Y): f = f' -> eqHom f f'.
   intros [].
   constructor.
 Defined.
 
-Polymorphic Lemma eqHom_eq@{i j}{A: Cat@{i j}}{X Y: Ob A}(f f': Hom X Y): eqHom f f' -> f = f'.
+Polymorphic Lemma eqHom_eq@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f f': Hom X Y): eqHom f f' -> f = f'.
 Proof.
   intro H1.
   set (X' := X).
@@ -157,7 +168,7 @@ Proof.
   reflexivity.
 Qed.
 
-Polymorphic Definition eqHom_trans'@{i j}{A: Cat@{i j}}{X Y: Ob A}(f f': Hom X Y):
+Polymorphic Definition eqHom_trans'@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f f': Hom X Y):
   (forall X' Y' (f'': Hom X' Y'), X = X' -> Y = Y' -> eqHom f f'' -> eqHom f'' f') -> f = f'.
   intro H1.
   apply eqHom_eq.

@@ -1,4 +1,3 @@
-Require Import Coq.Logic.EqdepFacts.
 Require Import Coq.Classes.RelationClasses.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.

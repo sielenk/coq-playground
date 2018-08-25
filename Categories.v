@@ -41,29 +41,52 @@ Polymorphic Cumulative Record Cat@{i j}: Type@{max(i+1,j+1)} := {
 
 
 
-Polymorphic Definition eqHom@{i j}{A: Cat@{i j}}{X Y: Ob A}(f: Hom X Y){X' Y': Ob A}(f': Hom X' Y'): Prop :=
-  eq_dep (Ob A * Ob A) (fun AB => Hom (fst AB) (snd AB)) (X, Y) f (X', Y') f'.
+Polymorphic Cumulative Inductive eqHom@{i j}{A: Cat@{i j}}{X Y: Ob A}(f: Hom X Y): forall{X' Y': Ob A}, Hom X' Y' -> Prop :=
+  eqHom_refl: eqHom f f.
 
-Definition eqHom_refl{A: Cat}{X Y: Ob A}(f: Hom X Y): eqHom f f :=
-  eq_dep_intro _ _ _ _.
-
-Definition eq_eqHom{A: Cat}{X Y: Ob A}(f f': Hom X Y): f = f' -> eqHom f f'.
+Polymorphic Definition eqHom_sym@{i j}{A: Cat@{i j}}{X Y: Ob A}(f: Hom X Y){X' Y': Ob A}(f': Hom X' Y'):
+  eqHom f f' -> eqHom f' f.
   intros [].
   constructor.
 Defined.
 
-Lemma eqHom_eq{A: Cat}{X Y: Ob A}(f f': Hom X Y): eqHom f f' -> f = f'.
+Polymorphic Definition eqHom_trans@{i j}{A: Cat@{i j}}
+  {X1 Y1: Ob A}(f1: Hom X1 Y1)
+  {X2 Y2: Ob A}(f2: Hom X2 Y2)
+  {X3 Y3: Ob A}(f3: Hom X3 Y3):
+  eqHom f2 f3 -> eqHom f1 f2 -> eqHom f1 f3.
+  intros [] H. exact H.
+Defined.
+
+Polymorphic Definition eq_eqHom@{i j}{A: Cat@{i j}}{X Y: Ob A}(f f': Hom X Y): f = f' -> eqHom f f'.
+  intros [].
+  constructor.
+Defined.
+
+Polymorphic Lemma eqHom_eq@{i j}{A: Cat@{i j}}{X Y: Ob A}(f f': Hom X Y): eqHom f f' -> f = f'.
 Proof.
-  apply eq_dep_eq.
+  intro H1.
+  set (X' := X).
+  set (Y' := Y).
+  change (Hom X' Y') in f'.
+  change (@eqHom@{i j} A X Y f X' Y' f') in H1.
+  set (H2 := eq_refl _ : Hom X Y = Hom X' Y').
+  transitivity (eqF H2 f).
+  reflexivity.
+  generalize dependent H2.
+  generalize dependent Y'.
+  generalize dependent X'.
+  intros X' Y' f' [] H.
+  rewrite (UIP_refl _ _ _).
+  reflexivity.
 Qed.
 
-Polymorphic Definition eqHom_trans@{i j}{A: Cat@{i j}}{X Y: Ob@{i j} A}(f f': Hom X Y):
+Polymorphic Definition eqHom_trans'@{i j}{A: Cat@{i j}}{X Y: Ob@{i j} A}(f f': Hom X Y):
   (forall X' Y' (f'': Hom X' Y'), X = X' -> Y = Y' -> eqHom f f'' -> eqHom f'' f') -> f = f'.
   intro H1.
   apply eqHom_eq.
   apply (H1 X Y f (eq_refl X) (eq_refl Y) (eqHom_refl f)).
 Defined.
-
 
 
 
@@ -489,14 +512,14 @@ Definition oneId(X: oneOb): oneHom X X :=
 Definition oneComp X Y Z (f: oneHom Y Z)(g: oneHom X Y): oneHom X Z :=
   match X as X', Z as Z' return oneHom X' Z' with tt, tt => UnitHom end.
 
-Definition CatOneSig: CatSig := {|
-  Ob   := oneOb;
-  Hom  := oneHom;
+Definition CatOneSig@{i j}: CatSig@{i j} := {|
+  Ob   := oneOb: Type@{i};
+  Hom  := oneHom: oneOb -> oneOb -> Type@{j};
   id   := oneId;
   comp := oneComp
 |}.
 
-Definition CatOne: Cat@{Set Set}.
+Definition CatOne@{i j}: Cat@{i j}.
   refine {| catSig := CatOneSig; catAx := _ |}.
   constructor.
   intros X Y []. reflexivity.
@@ -537,14 +560,14 @@ Definition twoComp X Y Z (f: twoHom Y Z)(g: twoHom X Y): twoHom X Z.
   ).
 Defined.
 
-Definition CatTwoSig: CatSig@{Set Set} := {|
-  Ob   := twoOb;
-  Hom  := twoHom;
+Definition CatTwoSig@{i j}: CatSig@{i j} := {|
+  Ob   := twoOb: Type@{i};
+  Hom  := twoHom: twoOb -> twoOb -> Type@{j};
   id   := twoId;
   comp := twoComp
 |}.
 
-Definition CatTwo: Cat@{Set Set}.
+Definition CatTwo@{i j}: Cat@{i j}.
   refine {| catSig := CatTwoSig; catAx := _ |}.
 
   assert (H1: forall (X Y : twoOb) (f : twoHom X Y),
@@ -563,10 +586,20 @@ Definition CatTwo: Cat@{Set Set}.
 Defined.
 
 
+Lemma one_skeletal: skeletal CatOne.
+Proof.
+  intros X Y f f'.
+  apply eqHom_trans'.
+  intros X' Y' ff H1 H2 H3.
+  destruct ff, f'; try reflexivity;
+  inversion H1;
+  inversion H2.
+Qed.
+
 Lemma two_skeletal: skeletal CatTwo.
 Proof.
   intros X Y f f'.
-  apply eqHom_trans@{Set Set}.
+  apply eqHom_trans'.
   intros X' Y' ff H1 H2 H3.
   destruct ff, f'; try reflexivity;
   inversion H1;

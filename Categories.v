@@ -81,7 +81,7 @@ Proof.
   reflexivity.
 Qed.
 
-Polymorphic Definition eqHom_trans'@{i j}{A: Cat@{i j}}{X Y: Ob@{i j} A}(f f': Hom X Y):
+Polymorphic Definition eqHom_trans'@{i j}{A: Cat@{i j}}{X Y: Ob A}(f f': Hom X Y):
   (forall X' Y' (f'': Hom X' Y'), X = X' -> Y = Y' -> eqHom f f'' -> eqHom f'' f') -> f = f'.
   intro H1.
   apply eqHom_eq.

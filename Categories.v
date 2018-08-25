@@ -214,7 +214,7 @@ Polymorphic Definition opSig@{i j}(A: CatSig@{i j}): CatSig@{i j} := {|
 |}.
 
 Polymorphic Definition op@{i j}(A: Cat@{i j}): Cat@{i j}.
-  refine {| catSig := opSig A; catAx := _ |}.
+  refine {| catSig := opSig@{i j} A |}.
   constructor; simpl; intros.
   apply (ident_l A).
   apply (ident_r A).
@@ -249,7 +249,7 @@ Section prod.
   Polymorphic Variables A B: Cat.
 
   Polymorphic Definition prod: Cat.
-    refine {| catSig := prodSig A B; catAx := _ |}.
+    refine {| catSig := prodSig A B |}.
     constructor; simpl; intros.
     rewrite (ident_r A).
     rewrite (ident_r B).
@@ -281,7 +281,7 @@ Definition deltaSig A {B}(X: Ob B): FunSig A B :=
   {| fmap1 _ := X; fmap2 _ _ _ := id X |}.
 
 Definition delta A {B: Cat}(X: Ob B): Fun A B.
-  refine {| funSig := deltaSig A X; funAx := _ |}.
+  refine {| funSig := deltaSig A X |}.
   constructor; intros; simpl.
   reflexivity.
   rewrite (ident_r B).
@@ -295,7 +295,7 @@ Definition funIdSig A: FunSig A A := {|
 |}.
 
 Definition funId A: Fun A A.
-  refine {| funSig := funIdSig A; funAx := _ |}.
+  refine {| funSig := funIdSig A |}.
   constructor; reflexivity.
 Defined.
 
@@ -305,7 +305,7 @@ Definition funCompSig{A B C}(F: FunSig B C)(G: FunSig A B): FunSig A C := {|
 |}.
 
 Definition funComp{A B C}(F: Fun B C)(G: Fun A B): Fun A C.
-  refine {| funSig := funCompSig F G; funAx := _ |}.
+  refine {| funSig := funCompSig F G |}.
   constructor; intros; simpl.
 
   rewrite (fmap_id G).
@@ -325,7 +325,7 @@ Definition CATSig: CatSig := {|
 |}.
 
 Definition CAT: Cat.
-  refine {| catSig := CATSig; catAx := _ |}.
+  refine {| catSig := CATSig |}.
   constructor; simpl.
 
   intros A B F. refine (funEq _ _ (fun X => _) _).
@@ -384,7 +384,7 @@ Section FUN.
   |}.
 
   Polymorphic Definition FUN: Cat.
-    refine {| catSig := FUNSig; catAx := _ |}.
+    refine {| catSig := FUNSig |}.
     constructor; simpl.
 
     intros F G N. refine (natEq _ _ _).
@@ -411,7 +411,7 @@ Polymorphic Definition SETSig: CatSig := {|
 |}.
 
 Polymorphic Definition SET@{i j}: Cat@{i j}.
-  refine {| catSig := SETSig@{i j}; catAx := _ |}.
+  refine {| catSig := SETSig@{i j} |}.
   constructor; simpl; intros; extensionality x; reflexivity.
 Defined.
 
@@ -448,7 +448,7 @@ Section yoneda.
   Defined.
 
   Polymorphic Definition bang: Fun@{i j k l} (op A) U.
-    refine {| funSig := bangSig; funAx := _ |}.
+    refine {| funSig := bangSig |}.
     constructor; intros; apply natEq; simpl.
     intro Y. extensionality f.
     rewrite (ident_r A). reflexivity.
@@ -520,7 +520,7 @@ Definition CatOneSig@{i j}: CatSig@{i j} := {|
 |}.
 
 Definition CatOne@{i j}: Cat@{i j}.
-  refine {| catSig := CatOneSig; catAx := _ |}.
+  refine {| catSig := CatOneSig |}.
   constructor.
   intros X Y []. reflexivity.
   intros X Y []. reflexivity.
@@ -568,7 +568,7 @@ Definition CatTwoSig@{i j}: CatSig@{i j} := {|
 |}.
 
 Definition CatTwo@{i j}: Cat@{i j}.
-  refine {| catSig := CatTwoSig; catAx := _ |}.
+  refine {| catSig := CatTwoSig |}.
 
   assert (H1: forall (X Y : twoOb) (f : twoHom X Y),
     twoComp X X Y f (twoId X) = f).

@@ -222,12 +222,12 @@ Defined.
 
 
 Section prodSig.
-  Polymorphic Universe i j k l.
+  Polymorphic Universe i j k l n m.
 
   Polymorphic Variables A: CatSig@{i j}.
   Polymorphic Variables B: CatSig@{k l}.
 
-  Polymorphic Definition prodSig: CatSig := {|
+  Polymorphic Definition prodSig: CatSig@{n m} := {|
     Ob             := Ob A * Ob B;
     Hom X Y        := (Hom (fst X) (fst Y) * Hom (snd X) (snd Y))%type;
     id X           := (id (fst X), id (snd X));
@@ -245,9 +245,12 @@ Arguments firstSig  {A B}.
 Arguments secondSig {A B}.
 
 Section prod.
-  Polymorphic Variables A B: Cat.
+  Polymorphic Universe i j k l n m.
 
-  Polymorphic Definition prod: Cat.
+  Polymorphic Variable A: Cat@{i j}.
+  Polymorphic Variable B: Cat@{k l}.
+
+  Polymorphic Definition prod: Cat@{n m}.
     refine {| catSig := prodSig A B |}.
     constructor; simpl; intros.
     rewrite (ident_r A).

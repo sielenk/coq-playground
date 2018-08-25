@@ -644,14 +644,27 @@ Definition xxFmap1(X: Ob CatTwo): Ob (FUN CatOne CatTwo) :=
 
 Definition xxFmap2(X Y: Ob CatTwo)(f: Hom X Y): Hom (xxFmap1 X) (xxFmap1 Y) :=
   match f in (twoHom X' Y') return (Hom (xxFmap1 X') (xxFmap1 Y')) with
-  | IdZero  => funId CatOne CatTwo FunA
-  | IdOne   => funId CatOne CatTwo FunB
+  | IdZero  => natId CatOne CatTwo FunA
+  | IdOne   => natId CatOne CatTwo FunB
   | ZeroOne => NatAB
   end.
 
 Definition xxx: Fun CatTwo (FUN CatOne CatTwo).
-  refine (Build_Fun _ _ xxFmap1 xxFmap2 _ _).
-  simpl. intros []; reflexivity.
+  refine {| funSig := {| fmap1 := xxFmap1; fmap2 := xxFmap2 |}|}.
+  constructor.
+  simpl.
+  intros []; reflexivity.
+
+  intros.
+  repeat rewrite eq_comp_comp'.
+
+  set (H1 := eq_refl Y).
+  set (H2 := eq_refl _).
+  set (Y' := Y).
+  change (Hom X Y') in g.
+  change (Y = Y') in H1.
+
+  destruct g; simpl.
   intros.
   apply eqHom_trans.
   intros.

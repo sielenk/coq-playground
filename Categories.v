@@ -613,20 +613,24 @@ Proof.
 Qed.
 
 
+Definition FunASig: FunSig CatOne CatTwo := {|
+  fmap1 _     := Zero: Ob CatTwo;
+  fmap2 _ _ _ := IdZero
+|}.
+
 Definition FunA: Fun CatOne CatTwo.
-  apply (Build_Fun CatOne CatTwo
-    (fun _ => Zero)
-    (fun _ _ _ => IdZero)).
-  reflexivity.
-  reflexivity.
+  refine {| funSig := FunASig |}.
+  constructor; simpl; intros; reflexivity.
 Defined.
 
+Definition FunBSig: FunSig CatOne CatTwo := {|
+  fmap1 _     := One: Ob CatTwo;
+  fmap2 _ _ _ := IdOne
+|}.
+
 Definition FunB: Fun CatOne CatTwo.
-  apply (Build_Fun CatOne CatTwo
-    (fun _ => One)
-    (fun _ _ _ => IdOne)).
-  reflexivity.
-  reflexivity.
+  refine {| funSig := FunBSig |}.
+  constructor; simpl; intros; reflexivity.
 Defined.
 
 Definition NatAB: Nat FunA FunB.

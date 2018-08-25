@@ -10,6 +10,12 @@ Definition eqF{X Y}(H: X = Y): X -> Y :=
   | eq_refl _ => fun x => x
   end.
 
+Definition injective{X Y}(f: X -> Y): Prop :=
+  forall x1 x2, f x1 = f x2 -> x1 = x2.
+
+Definition surjective{X Y}(f: X -> Y): Prop :=
+  forall y, exists x, f y = x.
+
 
 Polymorphic Cumulative Record CatSig@{i j}: Type@{max(i+1,j+1)} := {
   Ob         : Type@{i};
@@ -37,6 +43,31 @@ Polymorphic Cumulative Record Cat@{i j}: Type@{max(i+1,j+1)} := {
   catSig :> CatSig@{i j};
   catAx  :> CatAx@{i j} catSig
 }.
+
+
+Definition separator{A: CatSig}(S: Ob A): Prop :=
+  forall(X Y: Ob A)(f g: Hom X Y), f <> g -> exists(h: Hom S X), comp f h <> comp g h.
+
+Definition section{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+  exists g, comp g f = id X.
+
+Definition retraction{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+  exists g, comp f g = id Y.
+
+Definition iso{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+  exists g, comp f g = id Y /\ comp g f = id X.
+
+Definition mono{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+  forall W (h k: Hom W X), comp f h = comp f k -> h = k.
+
+Definition epi{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+  forall Z (h k: Hom Y Z), comp h f = comp k f -> h = k.
+
+Definition bi{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+  mono f /\ epi f.
+
+Definition balanced(A: CatSig): Prop :=
+  forall (X Y: Ob A)(f: Hom X Y), bi f -> iso f.
 
 
 
@@ -179,10 +210,10 @@ Qed.
 
 
 Definition faithful{A B}(F: FunSig A B): Prop :=
-  forall X Y (f f': Hom X Y), fmap2 F f = fmap2 F f' -> f = f'.
+  forall X Y, injective (fmap2 F (X:=X)(Y:=Y)).
 
 Definition full{A B}(F: FunSig A B): Prop :=
-  forall X Y f, exists f': Hom X Y, fmap2 F f' = f.
+  forall X Y, surjective (fmap2 F (X:=X)(Y:=Y)).
 
 
 

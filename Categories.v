@@ -526,6 +526,18 @@ Polymorphic Definition HomFun@{i j k l}{A: Cat@{i j}}(X: Ob A): Fun@{i j k l} A 
 Defined.
 
 
+Polymorphic Definition HomCFunSig@{i j k l}{A: Cat@{i j}}(Y: Ob A): FunSig@{i j k l} (op A) SET@{k l} :=
+  Build_FunSig@{i j k l} (op A) SET@{k l} (fun X => Hom (X: Ob A) Y) (fun X Y f g => comp g f).
+
+Polymorphic Definition HomCFun@{i j k l}{A: Cat@{i j}}(Y: Ob A): Fun@{i j k l} (op A) SET@{k l}.
+  refine (Build_Fun@{i j k l} (op A) SET@{k l} (HomCFunSig@{i j k l} Y) _).
+  constructor; intros; extensionality h; simpl.
+  rewrite (ident_r A). reflexivity.
+  symmetry. apply (assoc A).
+Defined.
+
+
+
 Section yoneda.
   Polymorphic Universe i j k l n m.
   Polymorphic Variable A: Cat@{i j}.

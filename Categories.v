@@ -45,6 +45,12 @@ Polymorphic Cumulative Record Cat@{i j}: Type@{max(i+1,j+1)} := {
 }.
 
 
+Definition initial{A: CatSig}(X: Ob A): Prop :=
+  forall Y, exists f: Hom X Y, forall f', f = f'.
+
+Definition terminal{A: CatSig}(Y: Ob A): Prop :=
+  forall X, exists f: Hom X Y, forall f', f = f'.
+
 Definition separator{A: CatSig}(S: Ob A): Prop :=
   forall(X Y: Ob A)(f g: Hom X Y), f <> g -> exists(h: Hom S X), comp f h <> comp g h.
 
@@ -595,19 +601,6 @@ Section yoneda.
 *)
 
 End yoneda.
-
-
-
-
-Definition unique{T}(t: T) := forall t', t = t'.
-
-Polymorphic Definition initial@{i j}{A: Cat@{i j}}(X: Ob A) := forall Y, { f: Hom X Y | unique f }.
-
-Polymorphic Definition skeletal@{i j}(A: CatSig@{i j}) := forall (X Y: Ob A)(f: Hom X Y), unique f.
-
-
-Definition cone{I A: Cat}(N: Ob A)(F: Fun I A) := Nat (delta I N) F.
-
 
 
 

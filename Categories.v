@@ -87,6 +87,38 @@ Polymorphic Definition skeletal@{i j}(A: CatSig@{i j}): Prop :=
 
 
 
+Polymorphic Instance Equivalence_isomorphic@{i j}{A: Cat@{i j}}: Equivalence (isomorphic (A:=A)).
+Proof.
+  split.
+
+  intro X.
+  exists (id X).
+  exists (id X).
+  split; apply (ident_r A).
+
+  intros X Y [f [f' H]].
+  exists f'.
+  exists f.
+  split; tauto.
+
+  intros X Y Z [f [f' [Hf1 Hf2]]] [g [g' [Hg1 Hg2]]].
+  exists (comp g f).
+  exists (comp f' g').
+  split.
+  rewrite (assoc A).
+  rewrite <- (assoc A f f' g').
+  rewrite Hf1.
+  rewrite (ident_l A).
+  assumption.
+  rewrite (assoc A).
+  rewrite <- (assoc A g' g f).
+  rewrite Hg2.
+  rewrite (ident_l A).
+  assumption.
+Qed.
+
+
+
 Polymorphic Definition FullSubcatSig(A: CatSig)(P: Ob A -> Prop): CatSig := {|
   Ob             := sig P;
   Hom X Y        := Hom (proj1_sig X) (proj1_sig Y);

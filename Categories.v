@@ -118,6 +118,19 @@ Proof.
 Qed.
 
 
+Polymorphic Definition EmbedTypeSig@{i}(T: Type@{i}): CatSig@{i Set} := {|
+  Ob             := T;
+  Hom            := eq;
+  id X           := eq_refl;
+  comp X Y Z f g := eq_trans g f
+|}.
+
+Polymorphic Definition EmbedType@{i}(T: Type@{i}): Cat@{i Set}.
+  refine {| catSig := EmbedTypeSig T |}.
+  split; simpl; intros; apply proof_irrelevance.
+Defined.
+
+
 
 Polymorphic Definition FullSubcatSig(A: CatSig)(P: Ob A -> Prop): CatSig := {|
   Ob             := sig P;

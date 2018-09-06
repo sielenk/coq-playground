@@ -1,4 +1,5 @@
-Require Import Coq.Classes.RelationClasses.
+Require Import Relations.
+Require Import RelationClasses.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 
@@ -74,6 +75,15 @@ Polymorphic Definition bi@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): Prop :=
 
 Polymorphic Definition balanced@{i j}(A: CatSig@{i j}): Prop :=
   forall (X Y: Ob A)(f: Hom X Y), bi f -> iso f.
+
+Polymorphic Definition thin@{i j}(A: CatSig@{i j}): Prop :=
+  forall (X Y: Ob A)(f f': Hom X Y), f = f'.
+
+Polymorphic Definition isomorphic@{i j}{A: CatSig@{i j}}: relation (Ob A) :=
+  fun X Y => exists(f: Hom X Y), iso f.
+
+Polymorphic Definition skeletal@{i j}(A: CatSig@{i j}): Prop :=
+  forall (X Y: Ob A), isomorphic X Y -> X = Y.
 
 
 
@@ -707,7 +717,7 @@ Definition CatTwo@{i j}: Cat@{i j}.
 Defined.
 
 
-Lemma one_skeletal: skeletal CatOne.
+Lemma one_thin: thin CatOne.
 Proof.
   intros X Y f f'.
   apply eqHom_trans'.
@@ -717,7 +727,7 @@ Proof.
   inversion H2.
 Qed.
 
-Lemma two_skeletal: skeletal CatTwo.
+Lemma two_thin: thin CatTwo.
 Proof.
   intros X Y f f'.
   apply eqHom_trans'.
@@ -730,7 +740,7 @@ Qed.
 Lemma zero_initial: @initial CatTwo Zero.
 Proof.
   intros [ | ]; [exists IdZero | exists ZeroOne];
-  apply two_skeletal.
+  apply two_thin.
 Qed.
 
 

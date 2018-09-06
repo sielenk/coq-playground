@@ -218,7 +218,10 @@ Qed.
 
 
 Section Fun.
-  Polymorphic Variables A B: CatSig.
+  Polymorphic Universe i j k l.
+
+  Polymorphic Variables A: CatSig@{i j}.
+  Polymorphic Variables B: CatSig@{k l}.
 
   Polymorphic Cumulative Record FunSig: Type := {
     fmap1: Ob A -> Ob B;
@@ -276,14 +279,14 @@ Polymorphic Definition embedding@{i j k l}{A B}(F: FunSig@{i j k l} A B): Prop :
   forall (X Y: Ob A)(f: Hom X Y)(X' Y': Ob A)(f': Hom X' Y'),
     eqHom (fmap2 F f) (fmap2 F f') -> eqHom f f'.
 
-Definition faithful{A B}(F: FunSig A B): Prop :=
+Polymorphic Definition faithful@{i j k l}{A B}(F: FunSig@{i j k l} A B): Prop :=
   forall X Y, injective (fmap2 F (X:=X)(Y:=Y)).
 
-Definition full{A B}(F: FunSig A B): Prop :=
+Polymorphic Definition full@{i j k l}{A B}(F: FunSig@{i j k l} A B): Prop :=
   forall X Y, surjective (fmap2 F (X:=X)(Y:=Y)).
 
-Definition amnestic{A B}(F: FunSig A B): Prop :=
-  forall(X Y: Ob A)(f: Hom X Y),
+Polymorphic Definition amnestic@{i j k l}{A B}(F: FunSig@{i j k l} A B): Prop :=
+  forall(X Y: Ob@{i j} A)(f: Hom X Y),
     iso f ->
     (exists Z, eqHom (fmap2 F f) (id Z)) ->
     (exists Z, eqHom f (id Z)).

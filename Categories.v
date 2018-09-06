@@ -292,6 +292,20 @@ Polymorphic Definition amnestic@{i j k l}{A B}(F: FunSig@{i j k l} A B): Prop :=
     (exists Z, eqHom f (id Z)).
 
 
+
+Lemma faithful_catax{A}{B: Cat}(F: Fun A B): faithful F -> CatAx A.
+Proof.
+  intro H.
+  constructor; intros; apply H; repeat rewrite (fmap_comp F); try rewrite (fmap_id F).
+  apply (ident_r B).
+  apply (ident_l B).
+  apply (assoc B).
+Qed.
+
+
+
+
+
 Polymorphic Cumulative Record Nat{A B}(F G: Fun A B) := {
   eta:> forall X, Hom (fmap1 F X) (fmap1 G X);
   eta_ax{X Y}(f: Hom X Y):

@@ -45,34 +45,34 @@ Polymorphic Cumulative Record Cat@{i j}: Type@{max(i+1,j+1)} := {
 }.
 
 
-Definition initial{A: CatSig}(X: Ob A): Prop :=
+Polymorphic Definition initial@{i j}{A: CatSig@{i j}}(X: Ob A): Prop :=
   forall Y, exists f: Hom X Y, forall f', f = f'.
 
-Definition terminal{A: CatSig}(Y: Ob A): Prop :=
+Polymorphic Definition terminal@{i j}{A: CatSig@{i j}}(Y: Ob A): Prop :=
   forall X, exists f: Hom X Y, forall f', f = f'.
 
-Definition separator{A: CatSig}(S: Ob A): Prop :=
+Polymorphic Definition separator@{i j}{A: CatSig@{i j}}(S: Ob A): Prop :=
   forall(X Y: Ob A)(f g: Hom X Y), f <> g -> exists(h: Hom S X), comp f h <> comp g h.
 
-Definition section{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+Polymorphic Definition section@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): Prop :=
   exists g, comp g f = id X.
 
-Definition retraction{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+Polymorphic Definition retraction@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): Prop :=
   exists g, comp f g = id Y.
 
-Definition iso{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+Polymorphic Definition iso@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): Prop :=
   exists g, comp f g = id Y /\ comp g f = id X.
 
-Definition mono{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+Polymorphic Definition mono@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): Prop :=
   forall W (h k: Hom W X), comp f h = comp f k -> h = k.
 
-Definition epi{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+Polymorphic Definition epi@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): Prop :=
   forall Z (h k: Hom Y Z), comp h f = comp k f -> h = k.
 
-Definition bi{A: CatSig}{X Y: Ob A}(f: Hom X Y): Prop :=
+Polymorphic Definition bi@{i j}{A: CatSig@{i j}}{X Y: Ob A}(f: Hom X Y): Prop :=
   mono f /\ epi f.
 
-Definition balanced(A: CatSig): Prop :=
+Polymorphic Definition balanced@{i j}(A: CatSig@{i j}): Prop :=
   forall (X Y: Ob A)(f: Hom X Y), bi f -> iso f.
 
 

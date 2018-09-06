@@ -620,11 +620,11 @@ Section yoneda.
   Polymorphic Universe i j k l n m.
   Polymorphic Variable A: Cat@{i j}.
 
-  Polymorphic Definition U: Cat@{n m} := FUN@{i j k l n m} A SET@{k l}.
+  Polymorphic Definition AtoSet: Cat@{n m} := FUN@{i j k l n m} A SET@{k l}.
 
-  Polymorphic Definition bangSig: FunSig@{i j k l} (op A) U.
+  Polymorphic Definition h_sup_Sig: FunSig@{i j k l} (op A) AtoSet.
     refine {|
-      fmap1       := HomFun (A := A): Ob (op A) -> Ob U;
+      fmap1       := HomFun (A := A): Ob (op A) -> Ob AtoSet;
       fmap2 X Y f := {|
         eta Z := (fun g => comp g f): Hom (fmap1 (HomFun (A := A) X) Z) (fmap1 (HomFun (A := A) Y) Z)
       |}
@@ -636,8 +636,8 @@ Section yoneda.
     reflexivity.
   Defined.
 
-  Polymorphic Definition bang: Fun@{i j k l} (op A) U.
-    refine {| funSig := bangSig |}.
+  Polymorphic Definition h_sup: Fun@{i j k l} (op A) AtoSet.
+    refine {| funSig := h_sup_Sig |}.
     constructor; intros; apply natEq; simpl.
     intro Y. extensionality f.
     rewrite (ident_r A). reflexivity.
@@ -645,32 +645,31 @@ Section yoneda.
     apply (assoc A).
   Defined.
 
-(*
-  Polymorphic Definition applySig: FunSig (prod U A) SET@{k l} := {|
-    fmap1 (X: Ob (prod U A)) := fmap1 (fmap1 first X) (fmap1 second X);
-    fmap2 X Y f := fmap2 (fmap2 first f) (fmap2 second f)
-  |}.
-*)
-
-  Polymorphic Variable F: Ob U.
-
-  Polymorphic Definition yoneda1(X: Ob A): fmap1 F X -> Hom (fmap1 bang X) F.
-    refine (fun u => Build_Nat A SET (HomFun X) F (fun Y f => fmap2 F f u) _).
-    simpl.
-    intros Y Z f.
-    extensionality g.
-    rewrite (fmap_comp F).
+  Polymorphic Definition h_sup_faithful: faithful h_sup.
+    intros X Y f g.
+    intro H.
+    rewrite <- (ident_l A f).
+    rewrite <- (ident_l A g).
+    change (fmap2 h_sup f X (id X) = fmap2 h_sup g X (id X)).
+    destruct H.
     reflexivity.
   Defined.
 
-  Polymorphic Definition yoneda2(X: Ob A): Hom (fmap1 bang X) F -> fmap1 F X :=
-    fun N => eta N X (id X).
+  Polymorphic Definition h_sup_full: full h_sup.
+    intros X Y f.
 
-(*
-  Lemma foo: faithful bang.
-  Proof.
-    intros X Y f f'.   simpl. H.
-*)
+    set (e Z := (fun g => comp g f): Hom (fmap1 (fmap1 h_sup X) Z) (fmap1 (fmap1 h_sup Y) Z)).
+
+    refine ((fun H => ex_intro _ {| eta := e; eta_ax := H |} _) _).
+
+    apply natEq.
+    reflexivity.
+
+    intros X' Y' f'.
+    extensionality g.
+    symmetry.
+    apply (assoc A).
+  Defined.
 
 End yoneda.
 

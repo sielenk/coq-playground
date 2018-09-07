@@ -616,6 +616,30 @@ Defined.
 
 
 
+Definition eval{A B: Cat}: Fun (prod (FUN A B) A) B.
+  refine {|
+    funSig := {|
+      fmap1 (fa: Ob (prod (FUN A B) A)) := fmap1 (fmap1 first fa) (fmap1 second fa);
+      fmap2 FX GY etaf := comp (fmap2 first etaf (fmap1 second GY)) (fmap2 (fmap1 first FX) (fmap2 second etaf))
+    |}
+  |}.
+  split; simpl.
+
+  intros [F X]; simpl.
+  rewrite (ident_l B).
+  apply (fmap_id F).
+
+  intros [F X] [G Y] [H Z] [eta1 f] [eta2 g]; simpl in * |- *.
+  rewrite (fmap_comp F).
+  repeat rewrite (assoc B (eta1 Z)).
+  f_equal.
+  rewrite <- (assoc B (eta2 Z)).
+  rewrite <- (eta_ax _ _ eta2 f).
+  apply (assoc B).
+Defined.
+
+
+
 Section yoneda.
   Polymorphic Universe i j k l n m.
   Polymorphic Variable A: Cat@{i j}.

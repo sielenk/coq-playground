@@ -639,6 +639,47 @@ Definition eval{A B: Cat}: Fun (prod (FUN A B) A) B.
 Defined.
 
 
+Definition yoneda1{A: Cat}(F: Ob (FUN A SET))(X: Ob A): Hom (fmap1 F X) (Nat (HomFun X) F).
+  refine ((fun u => {| eta Y := (fun f => fmap2 F f u): Hom (fmap1 (HomFun X) Y) (fmap1 F Y) |}) ).
+  simpl.
+  intros Y Z f.
+  extensionality g.
+  rewrite (fmap_comp F).
+  reflexivity.
+Defined.
+
+Definition yoneda2{A: Cat}(F: Ob (FUN A SET))(X: Ob A): Hom (Nat (HomFun X) F: Ob SET) (fmap1 F X) :=
+  fun eta => eta X (id X).
+
+Lemma yoneda{A: Cat}(F: Ob (FUN A SET))(X: Ob A): isomorphic (fmap1 F X) (Nat (HomFun X) F).
+Proof.
+  exists (yoneda1 F X).
+  exists (yoneda2 F X).
+  split; simpl.
+
+  extensionality eta.
+  apply natEq.
+  intro Y.
+  extensionality f.
+  set (H := eta_ax _ _ eta f).
+  simpl in H.
+  transitivity (eta Y (comp f (id X))).
+  rewrite (ident_r A f). reflexivity.
+  change ((fun x => eta Y (comp f x)) (id X) = fmap2 F f (eta X (id X))).
+  rewrite <- H.
+  reflexivity.
+
+  extensionality u.
+  rewrite (fmap_id F).
+  reflexivity.
+Qed.
+
+
+
+
+
+
+
 
 Section yoneda.
   Polymorphic Universe i j k l n m.

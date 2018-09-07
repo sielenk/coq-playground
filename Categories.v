@@ -639,6 +639,58 @@ Definition eval{A B: Cat}: Fun (prod (FUN A B) A) B.
 Defined.
 
 
+Lemma eqFunc{X Y}{f1 f2: X -> Y}: f1 = f2 -> forall x, f1 x = f2 x.
+Proof.
+  intros [] x.
+  reflexivity.
+Qed.
+
+
+Definition foo{A: Cat}: Fun (prod (FUN A SET) A) SET.
+  refine {|
+    funSig := {|
+      fmap1 (fa: Ob (prod (FUN A SET) A)) := Nat (HomFun (fmap1 second fa)) (fmap1 first fa): Ob SET;
+      fmap2 FX GY eta1f eta2 := {|
+        eta Z := (fun g => fmap2 (fmap1 first GY) (comp g (fmap2 second eta1f)) (comp (fmap2 first eta1f _) (eta2 _) (id _))):
+                 Hom (fmap1 (HomFun (fmap1 second GY)) Z) (fmap1 (fmap1 first GY) Z)
+      |}
+    |}
+  |}.
+  split; simpl.
+
+  intros [F X]; simpl.
+  extensionality eta2.
+  apply natEq; simpl.
+  intros Y.
+  extensionality g.
+  rewrite (ident_r A).
+  set (H1 := eqFunc (eta_ax _ F eta2 g) (id X)). simpl in H1.
+  rewrite H1.
+  rewrite (ident_r A g). reflexivity.
+
+  intros [F X] [G Y] [H Z] [eta1 f] [eta2 g]; simpl in * |- *.
+  extensionality eta3.
+  apply natEq; simpl.
+  intro W.
+  extensionality h.
+  rewrite (ident_l A).
+  set (H1 := eqFunc (eta_ax _ _ eta1 g)). simpl in H1.
+  rewrite <- H1.
+  repeat rewrite (fmap_comp H).
+  reflexivity.
+
+  Unshelve.
+
+  destruct FX as [F X], GY as [G Y], eta1f as [eta1 f].
+  simpl in * |- *.
+  intros Z W g.
+  extensionality h.
+  repeat rewrite (fmap_comp G).
+  reflexivity.
+Defined.
+
+
+
 Definition yoneda1{A: Cat}(F: Ob (FUN A SET))(X: Ob A): Hom (fmap1 F X) (Nat (HomFun X) F).
   refine ((fun u => {| eta Y := (fun f => fmap2 F f u): Hom (fmap1 (HomFun X) Y) (fmap1 F Y) |}) ).
   simpl.

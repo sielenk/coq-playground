@@ -619,7 +619,7 @@ Defined.
 Definition eval{A B: Cat}: Fun (prod (FUN A B) A) B.
   refine {|
     funSig := {|
-      fmap1 (fa: Ob (prod (FUN A B) A)) := fmap1 (fmap1 first fa) (fmap1 second fa);
+      fmap1 (FX: Ob (prod (FUN A B) A)) := fmap1 (fmap1 first FX) (fmap1 second FX);
       fmap2 FX GY etaf := comp (fmap2 first etaf (fmap1 second GY)) (fmap2 (fmap1 first FX) (fmap2 second etaf))
     |}
   |}.

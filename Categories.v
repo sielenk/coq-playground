@@ -3,8 +3,6 @@ Require Import RelationClasses.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 
-Set Universe Polymorphism On.
-
 
 Definition eqF{X Y}(H: X = Y): X -> Y :=
   match H in _ = Y' return X -> Y' with
@@ -22,6 +20,7 @@ Definition injective{X Y}(f: X -> Y): Prop :=
 
 Definition surjective{X Y}(f: X -> Y): Prop :=
   forall y, exists x, f y = x.
+
 
 
 Polymorphic Cumulative Record CatSig@{i j}: Type@{max(i+1,j+1)} := {
@@ -697,7 +696,7 @@ Definition eval{A B: Cat}: Fun (prod (FUN A B) A) B.
   repeat rewrite (assoc B (eta1 Z)).
   f_equal.
   rewrite <- (assoc B (eta2 Z)).
-  rewrite <- (eta_ax _ _ eta2 f).
+  rewrite <- (eta_ax F G eta2 f).
   apply (assoc B).
 Defined.
 
@@ -749,6 +748,7 @@ Definition CatOne@{i j}: Cat@{i j}.
   intros X Y []. reflexivity.
   intros [] X Y [] f g h. reflexivity.
 Defined.
+
 
 
 Inductive twoOb: Set := Zero | One.

@@ -599,26 +599,83 @@ Polymorphic Definition SET@{i j}: Cat@{i j}.
 Defined.
 
 
-Polymorphic Definition HomFunSig@{i j k l}{A: Cat@{i j}}(X: Ob A): FunSig@{i j k l} A SET@{k l} :=
+
+Polymorphic Definition h_sup_Sig@{i j k l}{A: Cat@{i j}}(X: Ob A): FunSig@{i j k l} A SET@{k l} :=
   Build_FunSig@{i j k l} A SET@{k l} (Hom X) (fun Y Z => comp).
 
-Polymorphic Definition HomFun@{i j k l}{A: Cat@{i j}}(X: Ob A): Fun@{i j k l} A SET@{k l}.
-  refine (Build_Fun@{i j k l} A SET@{k l} (HomFunSig@{i j k l} X) _).
+Polymorphic Definition h_sup@{i j k l}{A: Cat@{i j}}(X: Ob A): Fun@{i j k l} A SET@{k l}.
+  apply (Build_Fun@{i j k l} A SET@{k l} (h_sup_Sig@{i j k l} X)).
   constructor; intros; extensionality h; simpl.
   rewrite (ident_l A). reflexivity.
   apply (assoc A).
 Defined.
 
 
-Polymorphic Definition HomCFunSig@{i j k l}{A: Cat@{i j}}(Y: Ob A): FunSig@{i j k l} (op A) SET@{k l} :=
+Polymorphic Definition h_sub_Sig@{i j k l}{A: Cat@{i j}}(Y: Ob A): FunSig@{i j k l} (op A) SET@{k l} :=
   Build_FunSig@{i j k l} (op A) SET@{k l} (fun X => Hom (X: Ob A) Y) (fun X Y f g => comp g f).
 
-Polymorphic Definition HomCFun@{i j k l}{A: Cat@{i j}}(Y: Ob A): Fun@{i j k l} (op A) SET@{k l}.
-  refine (Build_Fun@{i j k l} (op A) SET@{k l} (HomCFunSig@{i j k l} Y) _).
+Polymorphic Definition h_sub@{i j k l}{A: Cat@{i j}}(Y: Ob A): Fun@{i j k l} (op A) SET@{k l}.
+  apply (Build_Fun@{i j k l} (op A) SET@{k l} (h_sub_Sig@{i j k l} Y)).
   constructor; intros; extensionality h; simpl.
   rewrite (ident_r A). reflexivity.
   symmetry. apply (assoc A).
 Defined.
+
+
+Section yoneda.
+  Polymorphic Universe i j k l n m.
+  Polymorphic Variable A: Cat@{i j}.
+
+  Polymorphic Variable F: Fun A SET@{k l}.
+  Polymorphic Variable X: Ob A.
+
+  Polymorphic Definition yoneda1: Hom (c:=SET) (fmap1 F X) (Nat (h_sup X) F).
+    refine (fun u => {| eta Y := (fun f => fmap2 F f u): Hom (fmap1 (h_sup X) Y) (fmap1 F Y) |}).
+    intros Y Z f.
+    extensionality g.
+    simpl. rewrite (fmap_comp F).
+    reflexivity.
+  Defined.
+
+  Polymorphic Definition yoneda2: Hom (c:=SET) (Nat (h_sup X) F) (fmap1 F X) :=
+    fun eta => eta X (id X).
+
+  Polymorphic Lemma yoneda12: comp yoneda1 yoneda2 = id _.
+  Proof.
+    extensionality eta.
+    apply natEq.
+    intro Y.
+    extensionality f.
+    set (H := eqFunc (eta_ax _ _ eta f) (id _)).
+    simpl in H.
+    rewrite (ident_r A f) in H.
+    symmetry.
+    assumption.
+  Qed.
+
+  Polymorphic Lemma yoneda21: comp yoneda2 yoneda1 = id _.
+  Proof.
+    extensionality u.
+    simpl.
+    rewrite (fmap_id F).
+    reflexivity.
+  Qed.
+
+  Polymorphic Lemma yoneda: isomorphic (A:=SET) (fmap1 F X) (Nat (h_sup X) F).
+  Proof.
+    exists yoneda1.
+    exists yoneda2.
+    split; simpl.
+    apply yoneda12.
+    apply yoneda21.
+  Qed.
+End yoneda.
+
+Arguments yoneda1  {A}.
+Arguments yoneda2  {A}.
+Arguments yoneda12 {A}.
+Arguments yoneda21 {A}.
+Arguments yoneda   {A}.
 
 
 
@@ -645,149 +702,24 @@ Definition eval{A B: Cat}: Fun (prod (FUN A B) A) B.
 Defined.
 
 
-Definition foo{A: Cat}: Fun (prod (FUN A SET) A) SET.
-  refine {|
-    funSig := {|
-      fmap1 (fa: Ob (prod (FUN A SET) A)) := Nat (HomFun (fmap1 second fa)) (fmap1 first fa): Ob SET;
-      fmap2 FX GY eta1f eta2 := {|
-        eta Z := (fun g => fmap2 (fmap1 first GY) (comp g (fmap2 second eta1f)) (comp (fmap2 first eta1f _) (eta2 _) (id _))):
-                 Hom (fmap1 (HomFun (fmap1 second GY)) Z) (fmap1 (fmap1 first GY) Z)
-      |}
-    |}
-  |}.
-  split; simpl.
-
-  intros [F X]; simpl.
-  extensionality eta2.
-  apply natEq; simpl.
-  intros Y.
-  extensionality g.
-  rewrite (ident_r A).
-  set (H1 := eqFunc (eta_ax _ F eta2 g) (id X)). simpl in H1.
-  rewrite H1.
-  rewrite (ident_r A g). reflexivity.
-
-  intros [F X] [G Y] [H Z] [eta1 f] [eta2 g]; simpl in * |- *.
-  extensionality eta3.
-  apply natEq; simpl.
-  intro W.
-  extensionality h.
-  rewrite (ident_l A).
-  set (H1 := eqFunc (eta_ax _ _ eta1 g)). simpl in H1.
-  rewrite <- H1.
-  repeat rewrite (fmap_comp H).
-  reflexivity.
-
-  Unshelve.
-
-  destruct FX as [F X], GY as [G Y], eta1f as [eta1 f].
-  simpl in * |- *.
-  intros Z W g.
-  extensionality h.
-  repeat rewrite (fmap_comp G).
-  reflexivity.
-Defined.
-
-
-
-Definition yoneda1{A: Cat}(F: Ob (FUN A SET))(X: Ob A): Hom (fmap1 F X) (Nat (HomFun X) F).
-  refine ((fun u => {| eta Y := (fun f => fmap2 F f u): Hom (fmap1 (HomFun X) Y) (fmap1 F Y) |}) ).
-  simpl.
-  intros Y Z f.
-  extensionality g.
-  rewrite (fmap_comp F).
-  reflexivity.
-Defined.
-
-Definition yoneda2{A: Cat}(F: Ob (FUN A SET))(X: Ob A): Hom (Nat (HomFun X) F: Ob SET) (fmap1 F X) :=
-  fun eta => eta X (id X).
-
-Lemma yoneda{A: Cat}(F: Ob (FUN A SET))(X: Ob A): isomorphic (fmap1 F X) (Nat (HomFun X) F).
-Proof.
-  exists (yoneda1 F X).
-  exists (yoneda2 F X).
-  split; simpl.
-
-  extensionality eta.
-  apply natEq.
-  intro Y.
-  extensionality f.
-  set (H := eta_ax _ _ eta f).
-  simpl in H.
-  transitivity (eta Y (comp f (id X))).
-  rewrite (ident_r A f). reflexivity.
-  change ((fun x => eta Y (comp f x)) (id X) = fmap2 F f (eta X (id X))).
-  rewrite <- H.
-  reflexivity.
-
-  extensionality u.
-  rewrite (fmap_id F).
-  reflexivity.
-Qed.
-
-
-
-
-
-
-
-
-Section yoneda.
+Section yoneda_embedding.
   Polymorphic Universe i j k l n m.
   Polymorphic Variable A: Cat@{i j}.
 
-  Polymorphic Definition AtoSet: Cat@{n m} := FUN@{i j k l n m} A SET@{k l}.
-
-  Polymorphic Definition h_sup_Sig: FunSig@{i j k l} (op A) AtoSet.
-    refine {|
-      fmap1       := HomFun (A := A): Ob (op A) -> Ob AtoSet;
-      fmap2 X Y f := {|
-        eta Z := (fun g => comp g f): Hom (fmap1 (HomFun (A := A) X) Z) (fmap1 (HomFun (A := A) Y) Z)
-      |}
-    |}.
-    intros W Z g.
-    extensionality h.
+  Polymorphic Lemma yoneda_embedding(X Y: Ob A): isomorphic (A:=SET) (Hom X Y) (Nat (h_sup Y) (h_sup X)).
+  Proof.
+    exists (yoneda1 (h_sup X) Y).
+    exists (yoneda2 (h_sup X) Y).
     simpl.
-    rewrite (assoc A).
-    reflexivity.
-  Defined.
+    split.
+    apply yoneda12.
+    extensionality f.
+    apply (ident_l A).
+  Qed.
+End yoneda_embedding.
 
-  Polymorphic Definition h_sup: Fun@{i j k l} (op A) AtoSet.
-    refine {| funSig := h_sup_Sig |}.
-    constructor; intros; apply natEq; simpl.
-    intro Y. extensionality f.
-    rewrite (ident_r A). reflexivity.
-    intro W. extensionality h.
-    apply (assoc A).
-  Defined.
 
-  Polymorphic Definition h_sup_faithful: faithful h_sup.
-    intros X Y f g.
-    intro H.
-    rewrite <- (ident_l A f).
-    rewrite <- (ident_l A g).
-    change (fmap2 h_sup f X (id X) = fmap2 h_sup g X (id X)).
-    destruct H.
-    reflexivity.
-  Defined.
 
-  Polymorphic Definition h_sup_full: full h_sup.
-    intros X Y f.
-
-    set (e Z := (fun g => comp g f): Hom (fmap1 (fmap1 h_sup X) Z) (fmap1 (fmap1 h_sup Y) Z)).
-
-    refine ((fun H => ex_intro _ {| eta := e; eta_ax := H |} _) _).
-
-    apply natEq.
-    reflexivity.
-
-    intros X' Y' f'.
-    extensionality g.
-    symmetry.
-    apply (assoc A).
-  Defined.
-
-End yoneda.
 
 
 

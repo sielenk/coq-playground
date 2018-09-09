@@ -11,6 +11,12 @@ Definition eqF{X Y}(H: X = Y): X -> Y :=
   | eq_refl _ => fun x => x
   end.
 
+Lemma eqFunc{X Y}{f1 f2: X -> Y}: f1 = f2 -> forall x, f1 x = f2 x.
+Proof.
+  intros [] x.
+  reflexivity.
+Qed.
+
 Definition injective{X Y}(f: X -> Y): Prop :=
   forall x1 x2, f x1 = f x2 -> x1 = x2.
 
@@ -637,13 +643,6 @@ Definition eval{A B: Cat}: Fun (prod (FUN A B) A) B.
   rewrite <- (eta_ax _ _ eta2 f).
   apply (assoc B).
 Defined.
-
-
-Lemma eqFunc{X Y}{f1 f2: X -> Y}: f1 = f2 -> forall x, f1 x = f2 x.
-Proof.
-  intros [] x.
-  reflexivity.
-Qed.
 
 
 Definition foo{A: Cat}: Fun (prod (FUN A SET) A) SET.

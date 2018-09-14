@@ -307,29 +307,24 @@ Arguments fmap_id   {A B F}.
 Arguments fmap_comp {A B F}.
 
 
-
-Lemma funHomEq{A B: Cat}{F G: Fun A B}(eq1: forall X, fmap1 F X = fmap1 G X):
-    forall X Y, Hom (fmap1 F X) (fmap1 F Y) = Hom (fmap1 G X) (fmap1 G Y).
-Proof.
-  intros X Y.
-  repeat rewrite eq1.
-  reflexivity.
-Qed.
-
-Lemma funEq{A B: Cat}(F G: Fun A B):
-    forall
-      (eq1: forall X, fmap1 F X = fmap1 G X)
-      (eq2: forall X Y f, eqF (funHomEq eq1 X Y) (fmap2 F f) = fmap2 G f),
-      F = G.
+Lemma funEq{A B: Cat}(F G: Fun A B): (forall X Y (f: Hom X Y), eqHom (fmap2 F f) (fmap2 G f)) -> F = G.
 Proof.
   destruct F as [[Fo Fh] Hf], G as [[Go Gh] Hg]; simpl.
-  intros H1 H2.
+  intro H1.
+
   assert (H: Fo = Go). extensionality X.
-  apply H1. destruct H.
-  assert (H: Fh = Gh). extensionality X. extensionality Y. extensionality f.
-  rewrite <- H2.
-  rewrite (UIP_refl _ _ _). reflexivity.
+  set (H2 := H1 _ _ (id X)).
+  rewrite (fmap_id Hf) in H2.
+  rewrite (fmap_id Hg) in H2.
+  destruct H2.
+  reflexivity.
   destruct H.
+
+  assert (H: Fh = Gh). extensionality X. extensionality Y. extensionality f.
+  apply eqHom_eq.
+  apply H1.
+  destruct H.
+
   f_equal.
   apply proof_irrelevance.
 Qed.
@@ -624,25 +619,14 @@ Definition CAT: Cat.
   refine {| catSig := CATSig |}.
   constructor; simpl.
 
-  intros A B F. refine (funEq _ _ (fun X => _) _).
-  intros X Y f.
-  rewrite (UIP_refl _ _ _).
-  reflexivity.
+  intros A B F.
+  apply funEq; reflexivity.
 
-  intros A B F. refine (funEq _ _ (fun X => _) _).
-  intros X Y f.
-  rewrite (UIP_refl _ _ _).
-  reflexivity.
+  intros A B F.
+  apply funEq; reflexivity.
 
-  intros A B C D F G H. refine (funEq _ _ (fun X => _) _).
-  intros X Y f.
-  rewrite (UIP_refl _ _ _).
-  reflexivity.
-
-  Unshelve.
-  reflexivity.
-  reflexivity.
-  reflexivity.
+  intros A B C D F G H.
+  apply funEq; reflexivity.
 Defined.
 
 

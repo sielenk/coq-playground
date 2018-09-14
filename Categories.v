@@ -401,6 +401,120 @@ Polymorphic Definition op@{i j}(A: Cat@{i j}): Cat@{i j}.
 Defined.
 
 
+
+Section commaSig.
+  Polymorphic Universe i j k l n m.
+
+  Polymorphic Variables A: CatSig@{i j}.
+  Polymorphic Variables B: CatSig@{k l}.
+  Polymorphic Variables C: Cat@{n m}.
+
+  Polymorphic Variables S: Fun A C.
+  Polymorphic Variables T: Fun B C.
+
+  Polymorphic Inductive CommaOb: Type :=
+    commaOb X Y: Hom (fmap1 S X) (fmap1 T Y) -> CommaOb.
+
+  Polymorphic Definition commaObX(X: CommaOb): Ob A := match X with commaOb X' _ _ => X' end.
+  Polymorphic Definition commaObY(X: CommaOb): Ob B := match X with commaOb _ Y' _ => Y' end.
+  Polymorphic Definition commaObf(X: CommaOb): Hom (fmap1 S (commaObX X)) (fmap1 T (commaObY X)) :=
+    match X with commaOb _ _ f' => f' end.
+
+  Polymorphic Definition commaObS(X Y: CommaOb) := Hom (commaObX X) (commaObX Y).
+  Polymorphic Definition commaObT(X Y: CommaOb) := Hom (commaObY X) (commaObY Y).
+
+  Polymorphic Definition commaObProp X Y: commaObS X Y -> commaObT X Y -> Prop :=
+    match X, Y with commaOb X Y h, commaOb X' Y' h' => fun f f' => comp h' (fmap2 S f) = comp (fmap2 T f') h end.
+
+  Polymorphic Inductive CommaHom X Y: Type := commaHom f f': commaObProp X Y f f' -> CommaHom X Y.
+
+  Polymorphic Definition commaHomS{X Y}(f: CommaHom X Y): commaObS X Y :=
+    match f with commaHom _ _ f' _ _ => f' end.
+
+  Polymorphic Definition commaHomT{X Y}(f: CommaHom X Y): commaObT X Y :=
+    match f with commaHom _ _ _ f' _ => f' end.
+
+  Polymorphic Lemma commaHomEq{X Y}(f f': CommaHom X Y):
+    commaHomS f =  commaHomS f' -> commaHomT f = commaHomT f' -> f = f'.
+  Proof.
+    destruct f as [f g H], f' as [f' g' H'].
+    simpl.
+    intros H1 H2. subst.
+    f_equal.
+    apply proof_irrelevance.
+  Qed.
+
+
+  Polymorphic Definition CommaSig: CatSig.
+    refine {|
+      Ob             := CommaOb;
+      Hom            := CommaHom;
+      id X           := commaHom X X (id _) (id _) _;
+      comp X Y Z f g := commaHom X Z (comp (commaHomS f) (commaHomS g))
+                                     (comp (commaHomT f) (commaHomT g)) _
+    |}.
+    destruct X as [X Y h]. simpl.
+    rewrite (fmap_id S).
+    rewrite (fmap_id T).
+    rewrite (ident_l C).
+    apply (ident_r C).
+    destruct Z as [X'' Y'' h''], Y as [X' Y' h'], X as [X Y h], f as [f f' Hf], g as [g g' Hg].
+    simpl in * |- *.
+    rewrite (fmap_comp S).
+    rewrite (fmap_comp T).
+    rewrite (assoc C _ _ h).
+    rewrite <- Hg.
+    rewrite <- (assoc C h'').
+    rewrite Hf.
+    apply (assoc C).
+  Defined.
+
+
+  Polymorphic Definition CommaASig: FunSig CommaSig A := {|
+    fmap1     := commaObX: Ob CommaSig -> Ob A;
+    fmap2 X Y := commaHomS
+  |}.
+
+  Polymorphic Definition CommaBSig: FunSig CommaSig B := {|
+    fmap1     := commaObY: Ob CommaSig -> Ob B;
+    fmap2 X Y := commaHomT
+  |}.
+End commaSig.
+
+Arguments CommaOb{A B C}.
+Arguments commaOb{A B C}.
+
+Arguments CommaHom{A B C S T}.
+Arguments commaHom{A B C S T}.
+
+Arguments CommaSig {A B C}.
+Arguments CommaASig{A B C}.
+Arguments CommaBSig{A B C}.
+
+
+Polymorphic Definition Comma{A B C: Cat}(S: Fun A C)(T: Fun B C): Cat.
+  refine {| catSig := CommaSig S T |}.
+  split; intros; apply commaHomEq; simpl.
+  destruct X, Y. apply (ident_r A).
+  destruct X, Y. apply (ident_r B).
+  destruct X, Y. apply (ident_l A).
+  destruct X, Y. apply (ident_l B).
+  destruct W, X, Y, Z. apply (assoc A).
+  destruct W, X, Y, Z. apply (assoc B).
+Defined.
+
+Polymorphic Definition CommaA{A B C} S T: Fun (@Comma A B C S T) A.
+  refine {| funSig := CommaASig S T |}.
+  split; reflexivity.
+Defined.
+
+Polymorphic Definition CommaB{A B C} S T: Fun (@Comma A B C S T) B.
+  refine {| funSig := CommaBSig S T |}.
+  split; reflexivity.
+Defined.
+
+
+
 Section prodSig.
   Polymorphic Universe i j k l n m.
 

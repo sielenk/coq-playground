@@ -4,7 +4,7 @@ Require Import Coq.Classes.Morphisms.
 Require Import Coq.Logic.Eqdep.
 
 
-Polymorphic Record PreCat := {
+Polymorphic Record CatSig: Type := {
   Ob        :> Type;
   Hom       :  Ob -> Ob -> Type;
   id X      :  Hom X X;
@@ -17,14 +17,24 @@ Global Arguments id   {A} : rename.
 Global Arguments comp {A X Y Z} : rename.
 Global Arguments eq_h {A X Y} : rename.
 
-Polymorphic Record Cat := {
-  preCat    :> PreCat;
-  eq_h_equiv:  forall X Y, Equivalence (@eq_h preCat X Y);
-  comp_eq   :  forall X Y Z, Proper (eq_h ==> eq_h ==> eq_h) (@comp preCat X Y Z);
-  ident_r   :  forall (X Y: preCat)(f: Hom X Y), eq_h (comp f (id _)) f;
-  ident_l   :  forall (X Y: preCat)(f: Hom X Y), eq_h (comp (id _) f) f;
-  assoc     :  forall (W X Y Z: preCat)(h: Hom Y Z)(g: Hom X Y)(f: Hom W X),
+Polymorphic Record CatAx(A: CatSig): Prop := {
+  eq_h_equiv:  forall X Y, Equivalence (@eq_h A X Y);
+  comp_eq   :  forall X Y Z, Proper (eq_h ==> eq_h ==> eq_h) (@comp A X Y Z);
+  ident_r   :  forall (X Y: A)(f: Hom X Y), eq_h (comp f (id _)) f;
+  ident_l   :  forall (X Y: A)(f: Hom X Y), eq_h (comp (id _) f) f;
+  assoc     :  forall (W X Y Z: A)(h: Hom Y Z)(g: Hom X Y)(f: Hom W X),
                  eq_h (comp h (comp g f)) (comp (comp h g) f)
+}.
+
+Global Arguments eq_h_equiv {A}.
+Global Arguments comp_eq    {A}.
+Global Arguments ident_r    {A}.
+Global Arguments ident_l    {A}.
+Global Arguments assoc      {A}.
+
+Polymorphic Record Cat: Type := {
+  catSig :> CatSig;
+  catAx  :> CatAx catSig
 }.
 
 Instance eq_h_Equivalence{A: Cat}{X Y}: Equivalence (@eq_h A X Y) :=
@@ -34,7 +44,7 @@ Instance comp_eq_Proper{A: Cat}{X Y Z}: Proper (eq_h ==> eq_h ==> eq_h) (@comp A
   comp_eq A X Y Z.
 
 
-Polymorphic Definition isomorphic{A: PreCat}: relation A :=
+Polymorphic Definition isomorphic{A: CatSig}: relation A :=
   fun X Y => exists f g, eq_h (comp f g) (id Y) /\ eq_h (comp g f) (id X).
 
 Instance isomorphic_Equivalence{A: Cat}: Equivalence (@isomorphic A).
@@ -44,7 +54,7 @@ Proof.
   exists (id X).
   exists (id X).
   assert (eq_h (comp (id X) (id X)) (id X)).
-  apply ident_r.
+  apply (ident_r A).
   split; assumption.
   intros X Y [f [g [H1 H2]]].
   exists g.
@@ -56,30 +66,30 @@ Proof.
   split.
   transitivity (comp f' g').
   transitivity (comp f' (comp f (comp g g'))).
-  symmetry. apply assoc.
+  symmetry. apply (assoc A).
   f_equiv.
   transitivity (comp (comp f g) g').
-  apply assoc.
+  apply (assoc A).
   transitivity (comp (id _) g').
   f_equiv.
   assumption.
-  apply ident_l.
+  apply (ident_l A).
   assumption.
   transitivity (comp g f).
   transitivity (comp g (comp g' (comp f' f))).
-  symmetry. apply assoc.
+  symmetry. apply (assoc A).
   f_equiv.
   transitivity (comp (comp g' f') f).
-  apply assoc.
+  apply (assoc A).
   transitivity (comp (id _) f).
   f_equiv.
   assumption.
-  apply ident_l.
+  apply (ident_l A).
   assumption.
 Qed.
 
 
-Polymorphic Record PreFun(A B: PreCat) := {
+Polymorphic Record FunSig(A B: CatSig) := {
   fmap_o  :> A -> B;
   fmap X Y:  Hom X Y -> Hom (fmap_o X) (fmap_o Y)
 }.
@@ -87,20 +97,28 @@ Polymorphic Record PreFun(A B: PreCat) := {
 Global Arguments fmap_o {A B}.
 Global Arguments fmap   {A B} _ {X Y}.
 
-Polymorphic Record Fun(A B: PreCat) := {
-  preFun    :> PreFun A B;
-  fmap_eq   :  forall X Y, Proper (eq_h ==> eq_h) (@fmap _ _ preFun X Y);
-  fmap_id   :  forall X, eq_h (fmap preFun (id X)) (id (preFun X));
-  fmap_comp :  forall X Y Z (g: Hom Y Z)(f: Hom X Y),
-                 eq_h (fmap preFun (comp g f))
-                      (comp (fmap preFun g) (fmap preFun f))
+Polymorphic Record FunAx{A B: CatSig}(F: FunSig A B): Prop := {
+  fmap_eq  : forall X Y, Proper (eq_h ==> eq_h) (@fmap A B F X Y);
+  fmap_id  : forall X, eq_h (fmap F (id X)) (id (F X));
+  fmap_comp: forall X Y Z (g: Hom Y Z)(f: Hom X Y),
+                 eq_h (fmap F (comp g f))
+                      (comp (fmap F g) (fmap F f))
+}.
+
+Global Arguments fmap_eq   {_ _ _} _ {_ _}.
+Global Arguments fmap_id   {_ _ _} _ {_}.
+Global Arguments fmap_comp {_ _ _} _ {_ _ _}.
+
+Polymorphic Record Fun(A B: CatSig): Type := {
+  funSig :> FunSig A B;
+  funAx  :> FunAx funSig
 }.
 
 Instance fmap_eq_Proper{A B}{F: Fun A B}{X Y}: Proper (eq_h ==> eq_h) (@fmap A B F X Y) :=
-  fmap_eq A B F X Y.
+  fmap_eq F.
 
 
-Polymorphic Record NatTrans{A B}(F G: PreFun A B) := {
+Polymorphic Record NatTrans{A B}(F G: FunSig A B) := {
   preNatTrans :> forall X, Hom (F X) (G X);
   natural     :  forall X Y (f: Hom X Y), 
                    eq_h (comp (fmap G f) (preNatTrans X))
@@ -112,9 +130,9 @@ Polymorphic Definition natTransId{A B: Cat}(F: Fun A B): NatTrans F F.
   refine {| preNatTrans X := id (F X) |}.
   intros.
   transitivity (fmap F f).
-  apply ident_r.
+  apply (ident_r B).
   symmetry.
-  apply ident_l.
+  apply (ident_l B).
 Defined.
 
 Polymorphic Definition natTransComp{A B: Cat}{F G H: Fun A B}:
@@ -123,20 +141,20 @@ Polymorphic Definition natTransComp{A B: Cat}{F G H: Fun A B}:
   refine {| preNatTrans X := comp (eta1 X) (eta2 X) |}.
   intros.
   transitivity (comp (comp (fmap H f) (eta1 X)) (eta2 X)).
-  apply assoc.
+  apply (assoc B).
   transitivity (comp (comp (eta1 Y) (fmap G f)) (eta2 X)).
   f_equiv.
   apply natural.
   transitivity (comp (eta1 Y) (comp (eta2 Y) (fmap F f))).
   transitivity (comp (eta1 Y) (comp (fmap G f) (eta2 X))).
   symmetry.
-  apply assoc.
+  apply (assoc B).
   f_equiv.
   apply natural.
-  apply assoc.
+  apply (assoc B).
 Defined.
 
-Polymorphic Definition preFUN(A B: Cat): PreCat := {|
+Polymorphic Definition FUNSig(A B: Cat): CatSig := {|
   Ob                 := Fun A B;
   Hom                := NatTrans;
   id                 := natTransId;
@@ -144,8 +162,9 @@ Polymorphic Definition preFUN(A B: Cat): PreCat := {|
   eq_h F G eta1 eta2 := forall X, eq_h (eta1 X) (eta2 X)
 |}.
 
-Polymorphic Definition FUN(A B: Cat): Cat.
-  refine {| preCat := preFUN A B |}.
+Polymorphic Lemma FUNAx(A B: Cat): CatAx (FUNSig A B).
+Proof.
+  split.
   intros F G.
   split.
   intros f X.
@@ -158,149 +177,185 @@ Polymorphic Definition FUN(A B: Cat): Cat.
   apply H1.
   apply H2.
   intros F G H f f' H1 g g' H2 X.
-  apply comp_eq.
+  apply (comp_eq B).
   apply H1.
   apply H2.
   intros F G f X.
-  apply ident_r.
+  apply (ident_r B).
   intros F G f X.
-  apply ident_l.
+  apply (ident_l B).
   intros F G H I h g f X.
-  apply assoc.
-Defined.
+  apply (assoc B).
+Qed.
+
+Polymorphic Definition FUN(A B: Cat): Cat := {| catAx  := FUNAx A B |}.
 
 
-Definition zero: Cat.
-  refine {|
-    preCat := {|
-      Ob             := Empty_set;
-      Hom _ _        := Empty_set;
-      id X           := match X with end;
-      comp _ Y _ _ _ := match Y with end;
-      eq_h _ _ _ _   := True
-    |}
-  |}; simpl; intros [].
-Defined.
 
-Polymorphic Definition zeroFun A: Fun zero A.
-  refine {|
-    preFun := {|
-      fmap_o(X: Ob zero) := match X with end;
-      fmap X Y f         := match f with end
-    |}
-  |}; intros [].
-Defined.
+Definition zeroSig: CatSig := {|
+  Ob             := Empty_set;
+  Hom _ _        := Empty_set;
+  id X           := match X with end;
+  comp _ Y _ _ _ := match Y with end;
+  eq_h _ _ _ _   := True
+|}.
+
+Lemma zeroAx: CatAx zeroSig.
+Proof.
+  split; simpl; intros [].
+Qed.
+
+Definition zero: Cat := {| catAx := zeroAx |}.
+
+Polymorphic Definition zeroFunSig A: FunSig zeroSig A := {|
+  fmap_o(X: Ob zero) := match X with end;
+  fmap X Y f         := match f with end
+|}.
+
+Polymorphic Lemma zeroFunAx A: FunAx (zeroFunSig A).
+Proof.
+  split; simpl; intros [].
+Qed.
+
+Polymorphic Definition zeroFun A: Fun zeroSig A :=
+  {| funAx := zeroFunAx A |}.
 
 
-Definition one: Cat.
-  refine {|
-    preCat := {|
-      Ob             := unit;
-      Hom _ _        := unit;
-      id _           := tt;
-      comp _ _ _ _ _ := tt;
-      eq_h _ _ _ _   := True
-    |}
-  |}; simpl; split; repeat intros []; try apply I.
-Defined.
 
-Polymorphic Definition oneFun{A: Cat}(X: Ob A): Fun one A.
-  refine {|
-    preFun := {|
-      fmap_o _   := X;
-      fmap _ _ _ := id X
-    |}
-  |}; simpl; intros.
-  intros f f' Hf. reflexivity.
+Definition oneSig: CatSig := {|
+  Ob             := unit;
+  Hom _ _        := unit;
+  id _           := tt;
+  comp _ _ _ _ _ := tt;
+  eq_h _ _ _ _   := True
+|}.
+
+Lemma oneAx: CatAx oneSig.
+Proof.
+  split; simpl; split; repeat intros []; try apply I.
+Qed.
+
+Definition one: Cat := {| catAx := oneAx |}.
+
+Polymorphic Definition oneFunSig{A: CatSig}(X: Ob A): FunSig one A := {|
+  fmap_o _   := X;
+  fmap _ _ _ := id X
+|}.
+
+Polymorphic Lemma oneFunAx{A: Cat}(W: Ob A): FunAx (oneFunSig W).
+Proof.
+  split; simpl; intros.
+  intros f f' Hf.
   reflexivity.
-  symmetry. apply ident_r.
-Defined.
+  reflexivity.
+  symmetry. apply (ident_r A).
+Qed.
+
+Polymorphic Definition oneFun{A: Cat}(X: Ob A): Fun one A :=
+  {| funAx := oneFunAx X |}.
 
 
-Definition two: Cat.
-  refine {|
-    preCat := {|
-      Ob             := bool;
-      Hom X Y        := match X, Y with
-                        | true, false => Empty_set
-                        | _, _        => unit
-                        end;
-      id X           := match X with
-                        | false => tt
-                        | true  => tt
-                        end;
-      comp X Y Z     := match X, Z with
-                        | true, false => match Y with
-                                         | true  => fun g _ => match g with end
-                                         | false => fun _ f => match f with end
-                                         end
-                        | _, _        => fun _ _ => tt
-                        end;
-      eq_h _ _ _ _   := True
-    |}
-  |}; simpl; try auto.
+
+Definition twoSig: CatSig := {|
+  Ob             := bool;
+  Hom X Y        := match X, Y with
+                    | true, false => Empty_set
+                    | _, _        => unit
+                    end;
+  id X           := match X with
+                    | false => tt
+                    | true  => tt
+                    end;
+  comp X Y Z     := match X, Z with
+                    | true, false => match Y with
+                                     | true  => fun g _ => match g with end
+                                     | false => fun _ f => match f with end
+                                     end
+                    | _, _        => fun _ _ => tt
+                    end;
+  eq_h _ _ _ _   := True
+|}.
+
+Lemma twoAx: CatAx twoSig.
+Proof.
+  split; simpl; try auto.
   intros X Y; split; auto.
   intros X Y Z _ _ _ _ _ _. auto.
-Defined.
+Qed.
 
-Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A.
-  refine {|
-    preFun := {|
-      fmap_o     := fun(X': two) => if X' then Y else X;
-      fmap X' Y' := match X', Y' with
-                    | false, false => fun _ => id X
-                    | true, true   => fun _ => id Y
-                    | false, true  => fun _ => f
-                    | true, false  => fun f' => match f' with end
-                    end
-    |}
-  |}.
+Definition two: Cat := {| catAx := twoAx |}.
+
+Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A := {|
+  fmap_o     := fun(X': two) => if X' then Y else X;
+  fmap X' Y' := match X', Y' with
+                | false, false => fun _ => id X
+                | true, true   => fun _ => id Y
+                | false, true  => fun _ => f
+                | true, false  => fun f' => match f' with end
+                end
+|}.
+
+Polymorphic Lemma twoFunAx{A: Cat}{X Y: A}(f: Hom X Y): FunAx (twoFunSig f).
+Proof.
+  split.
   intros [|] [|] f1 f2 Hf; simpl; try reflexivity.
   destruct f1.
   intros [|]; reflexivity.
   intros [|] [|] [|] g' f'; simpl.
   symmetry.
-  apply ident_r.
+  apply (ident_r A).
   destruct g'.
   destruct f'.
   destruct f'.
   symmetry.
-  apply ident_l.
+  apply (ident_l A).
   destruct g'.
   symmetry.
-  apply ident_r.
+  apply (ident_r A).
   symmetry.
-  apply ident_r.
-Defined.
+  apply (ident_r A).
+Qed.
+
+Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A :=
+  {| funAx := twoFunAx f |}.
 
 
-Definition equalizer: Cat.
-  refine {|
-    preCat := {|
-      Ob             := bool;
-      Hom X Y        := match X, Y with
-                        | true, false => Empty_set
-                        | false, true => bool
-                        | _, _        => unit
-                        end;
-      id X           := match X with
-                        | false => tt
-                        | true  => tt
-                        end;
-      comp X Y Z     := match X, Z with
-                        | true, false => match Y with
-                                         | true  => fun g _ => match g with end
-                                         | false => fun _ f => match f with end
-                                         end
-                        | false, true => match Y with
-                                         | true  => fun _ f => f
-                                         | false => fun g _ => g
-                                         end
-                        | _, _        => fun _ _ => tt
-                        end;
-      eq_h _ _       := eq
-    |}
-  |}; simpl; try auto.
+
+Definition equalizerSig: CatSig := {|
+  Ob             := bool;
+  Hom X Y        := match X, Y with
+                    | true, false => Empty_set
+                    | false, true => bool
+                    | _, _        => unit
+                    end;
+  id X           := match X with
+                    | false => tt
+                    | true  => tt
+                    end;
+  comp X Y Z     := match X, Z with
+                    | true, false => match Y with
+                                     | true  => fun g _ => match g with end
+                                     | false => fun _ f => match f with end
+                                     end
+                    | false, true => match Y with
+                                     | true  => fun _ f => f
+                                     | false => fun g _ => g
+                                     end
+                    | _, _        => fun _ _ => tt
+                    end;
+  eq_h _ _       := eq
+|}.
+
+Lemma equalizerAx: CatAx equalizerSig.
+Proof.
+  split.
+  split; simpl; try auto.
+  intros u v w H1 H2.
+  transitivity v; assumption.
+  intros X Y Z f f' Hf g g' Hg.
+  f_equiv.
+  apply Hf.
+  apply Hg.
   intros [|] [|] []; reflexivity.
   intros [|] [|] []; reflexivity.
   intros [|] [|] [|] [|]; try reflexivity; simpl.
@@ -308,131 +363,162 @@ Definition equalizer: Cat.
   intros [].
   intros _ _ [].
   intros _ [].
-Defined.
+Qed.
 
-Polymorphic Definition equalizerFun{A: Cat}{X Y: A}(f g: Hom X Y): Fun equalizer A.
-  refine {|
-    preFun := {|
-      fmap_o     := fun(X': equalizer) => if X' then Y else X;
-      fmap X' Y' := match X', Y' with
-                    | false, false => fun _ => id X
-                    | true, true   => fun _ => id Y
-                    | false, true  => fun f' => if f' then f else g
-                    | true, false  => fun f' => match f' with end
-                    end
-    |}
-  |}.
+Definition equalizer: Cat := {| catAx := equalizerAx |}.
+
+Polymorphic Definition equalizerFunSig{A: CatSig}{X Y: A}(f g: Hom X Y):
+    FunSig equalizerSig A := {|
+  fmap_o     := fun(X': equalizer) => if X' then Y else X;
+  fmap X' Y' := match X', Y' with
+                | false, false => fun _ => id X
+                | true, true   => fun _ => id Y
+                | false, true  => fun f' => if f' then f else g
+                | true, false  => fun f' => match f' with end
+                end
+|}.
+
+Polymorphic Lemma equalizerFunAx{A: Cat}{X Y: A}(f g: Hom X Y):
+    FunAx (equalizerFunSig f g).
+Proof.
+  split.
+  intros X' Y' h h' []. reflexivity.
   intros [|]; reflexivity.
   intros [|] [|] [|] g' f'; simpl.
-  symmetry. apply ident_r.
+  symmetry. apply (ident_r A).
   destruct g'.
   destruct f'.
   destruct f'.
-  symmetry. apply ident_l.
+  symmetry. apply (ident_l A).
   destruct g'.
-  symmetry. apply ident_r.
-  symmetry. apply ident_r.
-Defined.
+  symmetry. apply (ident_r A).
+  symmetry. apply (ident_r A).
+Qed.
+
+Polymorphic Definition equalizerFun{A: Cat}{X Y: A}(f g: Hom X Y):
+  Fun equalizer A := {| funAx := equalizerFunAx f g |}.
 
 
-Definition pullback: Cat.
-  refine {|
-    preCat := {|
-      Ob             := option bool;
-      Hom X Y        := match X, Y with
-                        | None, Some _          => Empty_set
-                        | Some true, Some false => Empty_set
-                        | Some false, Some true => Empty_set
-                        | _, _                  => unit
-                        end;
-      id X           := match X with
-                        | None       => tt
-                        | Some false => tt
-                        | Some true  => tt
-                        end;
-      comp X Y Z     := match X, Y, Z with
-                        | None, Some _, _          => fun _ f => match f with end
-                        | Some true, Some false, _ => fun _ f => match f with end
-                        | Some false, Some true, _ => fun _ f => match f with end
-                        | _, None, Some _          => fun g _ => match g with end
-                        | _, Some true, Some false => fun g _ => match g with end
-                        | _, Some false, Some true => fun g _ => match g with end
-                        | _, _, _                  => fun _ _ => tt
-                        end;
-      eq_h _ _ _ _   := True
-    |}
-  |}; simpl; try auto.
+
+Definition pullbackSig: CatSig := {|
+  Ob             := option bool;
+  Hom X Y        := match X, Y with
+                    | None, Some _          => Empty_set
+                    | Some true, Some false => Empty_set
+                    | Some false, Some true => Empty_set
+                    | _, _                  => unit
+                    end;
+  id X           := match X with
+                    | None       => tt
+                    | Some false => tt
+                    | Some true  => tt
+                    end;
+  comp X Y Z     := match X, Y, Z with
+                    | None, Some _, _          => fun _ f => match f with end
+                    | Some true, Some false, _ => fun _ f => match f with end
+                    | Some false, Some true, _ => fun _ f => match f with end
+                    | _, None, Some _          => fun g _ => match g with end
+                    | _, Some true, Some false => fun g _ => match g with end
+                    | _, Some false, Some true => fun g _ => match g with end
+                    | _, _, _                  => fun _ _ => tt
+                    end;
+  eq_h _ _ _ _   := True
+|}.
+
+Lemma pullbackAx: CatAx pullbackSig.
+Proof.
+  split; simpl; try auto.
   intros X Y; split; auto.
   intros X Y Z _ _ _ _ _ _. auto.
-Defined.
+Qed.
 
-Polymorphic Definition pullbackFun{A: Cat}{X Y Z: A}(f: Hom X Z)(g: Hom Y Z): Fun pullback A.
-  refine {|
-    preFun := {|
-      fmap_o     := fun(X': pullback)=> match X' with
-                    | Some false => X
-                    | Some true  => Y
-                    | None       => Z
-                    end;
-      fmap X' Y' := match X', Y' with
-                    | Some false, Some false => fun _ => id X
-                    | Some true, Some true   => fun _ => id Y
-                    | None, None             => fun _ => id Z
-                    | Some false, None       => fun _ => f
-                    | Some true, None        => fun _ => g
-                    | _, _                   => fun f => match f with end
-                    end
-    |}
-  |}.
+Definition pullback: Cat := {| catAx := pullbackAx |}.
+
+Polymorphic Definition pullbackFunSig{A: CatSig}{X Y Z: A}(f: Hom X Z)(g: Hom Y Z):
+    FunSig pullbackSig A := {|
+  fmap_o     := fun(X': pullback)=> match X' with
+                | Some false => X
+                | Some true  => Y
+                | None       => Z
+                end;
+  fmap X' Y' := match X', Y' with
+                | Some false, Some false => fun _ => id X
+                | Some true, Some true   => fun _ => id Y
+                | None, None             => fun _ => id Z
+                | Some false, None       => fun _ => f
+                | Some true, None        => fun _ => g
+                | _, _                   => fun f => match f with end
+                end
+|}.
+
+Polymorphic Lemma pullbackFunAx{A: Cat}{X Y Z: A}(f: Hom X Z)(g: Hom Y Z):
+    FunAx (pullbackFunSig f g).
+Proof.
+  split.
   intros [[|]|] [[|]|]; simpl; intros [] u' H; reflexivity.
   intros [[|]|]; simpl; reflexivity.
   intros [[|]|] [[|]|] [[|]|]; simpl; intros [] []; symmetry;
-    try apply ident_r; apply ident_l.
-Defined.
+    try apply (ident_r A); apply (ident_l A).
+Qed.
+
+Polymorphic Definition pullbackFun{A: Cat}{X Y Z: A}(f: Hom X Z)(g: Hom Y Z):
+    Fun pullbackSig A := {| funAx := pullbackFunAx f g |}.
 
 
-Polymorphic Definition product(I: Type): Cat.
-  refine {|
-    preCat := {|
-      Ob             := I;
-      Hom X Y        := X = Y;
-      id X           := eq_refl X;
-      comp X Y Z g f := eq_trans f g;
-      eq_h _ _ _ _   := True
-    |}
-  |}; simpl; try auto.
+
+Polymorphic Definition productSig(I: Type): CatSig := {|
+  Ob             := I;
+  Hom X Y        := X = Y;
+  id X           := eq_refl X;
+  comp X Y Z g f := eq_trans f g;
+  eq_h _ _ _ _   := True
+|}.
+
+Polymorphic Lemma productAx(I: Type): CatAx (productSig I).
+Proof.
+  split; simpl; try auto.
   intros X Y; split; auto.
   intros X Y Z _ _ _ _ _ _. auto.
-Defined.
+Qed.
 
-Polymorphic Definition productFun{I: Type}{A: Cat}(X: I -> A): Fun (product I) A.
-  refine {|
-    preFun := {|
-      fmap_o       := X: product I -> A;
-      fmap I1 I2 H := match H in _ = I2' with eq_refl => id _ end
-    |}
-  |}; simpl; try reflexivity.
+Polymorphic Definition product(I: Type): Cat := {| catAx := productAx I |}.
+
+Polymorphic Definition productFunSig{I: Type}{A: CatSig}(X: I -> A):
+    FunSig (productSig I) A := {|
+  fmap_o       := X: product I -> A;
+  fmap I1 I2 H := match H in _ = I2' with eq_refl => id _ end
+|}.
+
+Polymorphic Lemma productFunAx{I: Type}{A: Cat}(X: I -> A):
+    FunAx (productFunSig X).
+Proof.
+  split; simpl; try reflexivity.
   intros Y Z [] H _.
   rewrite (UIP_refl I Y H). reflexivity.
   intros W Y Z [] []. simpl.
-  symmetry. apply ident_r.
-Defined.
+  symmetry. apply (ident_r A).
+Qed.
+
+Polymorphic Definition productFun{I: Type}{A: Cat}(X: I -> A):
+    FunSig (productSig I) A := {| funAx := productFunAx X |}.
+
 
 
 Polymorphic Definition deltaOb A {B: Cat}(X: B): Ob (FUN A B).
   refine {|
-    preFun := {|
+    funSig := {|
       fmap_o _   := X;
       fmap _ _ _ := id X
     |}
   |}.
+  split.
   intros Y Z f f' Hf.
   reflexivity.
   intros Y.
   reflexivity.
   simpl. intros _ _ _ _ _.
   symmetry.
-  apply ident_r.
+  apply (ident_r B).
 Defined.
 
 Polymorphic Definition deltaHom A {B: Cat}{X Y: B}(f: Hom X Y):
@@ -441,18 +527,19 @@ Polymorphic Definition deltaHom A {B: Cat}{X Y: B}(f: Hom X Y):
   simpl.
   intros _ _ _.
   transitivity f.
-  apply ident_l.
+  apply (ident_l B).
   symmetry.
-  apply ident_r.
+  apply (ident_r B).
 Defined.
 
 Polymorphic Definition delta(A B: Cat): Fun B (FUN A B).
   refine {|
-    preFun := {|
+    funSig := {|
       fmap_o   := deltaOb A;
       fmap X Y := deltaHom A
     |}
   |}.
+  split.
   intros X Y f f' Hf u.
   apply Hf.
   intros X u.
@@ -464,11 +551,12 @@ Defined.
 
 Polymorphic Definition deltaInv(A: Cat): Fun (FUN one A) A.
   refine {|
-    preFun := {|
+    funSig := {|
       fmap_o     := fun(X: Ob (FUN one A)) => X tt;
       fmap X Y f := f tt
     |}
   |}.
+  split.
   intros X Y f f' Hf.
   apply Hf.
   intros X.
@@ -481,7 +569,8 @@ Defined.
 
 
 Polymorphic Definition funId(A: Cat): Fun A A.
-  refine {| preFun := {| fmap_o X := X; fmap X Y f := f |} |}.
+  refine {| funSig := {| fmap_o X := X; fmap X Y f := f |} |}.
+  split.
   intros X Y f f' H1.
   assumption.
   intros X.
@@ -491,24 +580,25 @@ Polymorphic Definition funId(A: Cat): Fun A A.
 Defined.
 
 Polymorphic Definition funComp(A B C: Cat)(G: Fun B C)(F: Fun A B): Fun A C.
-  refine {| preFun := {| fmap_o X := G (F X); fmap X Y f := fmap G (fmap F f) |} |}.
+  refine {| funSig := {| fmap_o X := G (F X); fmap X Y f := fmap G (fmap F f) |} |}.
+  split.
   intros X Y f f' H1.
-  apply fmap_eq.
-  apply fmap_eq.
+  apply (fmap_eq G).
+  apply (fmap_eq F).
   assumption.
   intros X.
   simpl. transitivity (fmap G (id (F X))).
   f_equiv.
-  apply fmap_id.
-  apply fmap_id.
+  apply (fmap_id F).
+  apply (fmap_id G).
   intros X Y Z g f.
   simpl. transitivity (fmap G (comp (fmap F g) (fmap F f))).
   f_equiv.
-  apply fmap_comp.
-  apply fmap_comp.
+  apply (fmap_comp F).
+  apply (fmap_comp G).
 Defined.
 
-Polymorphic Definition CAT: PreCat := {|
+Polymorphic Definition CAT: CatSig := {|
   Ob       := Cat;
   Hom      := Fun;
   id       := funId;
@@ -517,16 +607,17 @@ Polymorphic Definition CAT: PreCat := {|
 |}.
 
 
-Polymorphic Definition CiC: Cat.
-  refine {|
-    preCat := {|
-      Ob               := Type;
-      Hom X Y          := X -> Y;
-      id X x           := x;
-      comp X Y Z g f x := g (f x);
-      eq_h X Y f g     := forall x, f x = g x
-    |}
-  |}; simpl; try reflexivity.
+Polymorphic Definition CiCSig: CatSig := {|
+  Ob               := Type;
+  Hom X Y          := X -> Y;
+  id X x           := x;
+  comp X Y Z g f x := g (f x);
+  eq_h X Y f g     := forall x, f x = g x
+|}.
+
+Polymorphic Lemma CiCAx: CatAx CiCSig.
+Proof.
+  split; simpl; try reflexivity.
   intros X Y.
   split.
   intros f x. reflexivity.

@@ -122,7 +122,7 @@ Polymorphic Record NatTrans{A B}(F G: FunSig A B) := {
   preNatTrans :> forall X, Hom (F X) (G X);
   natural     :  forall X Y (f: Hom X Y), 
                    eq_h (comp (fmap G f) (preNatTrans X))
-                        (comp (preNatTrans Y) (fmap F f)) 
+                        (comp (preNatTrans Y) (fmap F f))
 }.
 
 
@@ -251,8 +251,9 @@ Proof.
   symmetry. apply (ident_r A).
 Qed.
 
-Polymorphic Definition oneFun{A: Cat}(X: Ob A): Fun one A :=
-  {| funAx := oneFunAx X |}.
+Polymorphic Definition oneFun{A: Cat}(X: Ob A): Fun one A := {|
+  funAx := oneFunAx X
+|}.
 
 
 
@@ -283,7 +284,9 @@ Proof.
   intros X Y Z _ _ _ _ _ _. auto.
 Qed.
 
-Definition two: Cat := {| catAx := twoAx |}.
+Definition two: Cat := {|
+  catAx := twoAx
+|}.
 
 Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A := {|
   fmap_o     := fun(X': two) => if X' then Y else X;
@@ -365,7 +368,9 @@ Proof.
   intros _ [].
 Qed.
 
-Definition equalizer: Cat := {| catAx := equalizerAx |}.
+Definition equalizer: Cat := {|
+  catAx := equalizerAx
+|}.
 
 Polymorphic Definition equalizerFunSig{A: CatSig}{X Y: A}(f g: Hom X Y):
     FunSig equalizerSig A := {|
@@ -396,7 +401,9 @@ Proof.
 Qed.
 
 Polymorphic Definition equalizerFun{A: Cat}{X Y: A}(f g: Hom X Y):
-  Fun equalizer A := {| funAx := equalizerFunAx f g |}.
+    Fun equalizer A := {|
+  funAx := equalizerFunAx f g
+|}.
 
 
 
@@ -432,26 +439,28 @@ Proof.
   intros X Y Z _ _ _ _ _ _. auto.
 Qed.
 
-Definition pullback: Cat := {| catAx := pullbackAx |}.
+Definition pullback: Cat := {|
+  catAx := pullbackAx
+|}.
 
-Polymorphic Definition pullbackFunSig{A: CatSig}{X Y Z: A}(f: Hom X Z)(g: Hom Y Z):
+Polymorphic Definition pullbackFunSig{A: CatSig}{X1 X2 Y: A}(f: Hom X1 Y)(g: Hom X2 Y):
     FunSig pullbackSig A := {|
   fmap_o     := fun(X': pullback)=> match X' with
-                | Some false => X
-                | Some true  => Y
-                | None       => Z
+                | Some false => X1
+                | Some true  => X2
+                | None       => Y
                 end;
   fmap X' Y' := match X', Y' with
-                | Some false, Some false => fun _ => id X
-                | Some true, Some true   => fun _ => id Y
-                | None, None             => fun _ => id Z
+                | Some false, Some false => fun _ => id X1
+                | Some true, Some true   => fun _ => id X2
+                | None, None             => fun _ => id Y
                 | Some false, None       => fun _ => f
                 | Some true, None        => fun _ => g
                 | _, _                   => fun f => match f with end
                 end
 |}.
 
-Polymorphic Lemma pullbackFunAx{A: Cat}{X Y Z: A}(f: Hom X Z)(g: Hom Y Z):
+Polymorphic Lemma pullbackFunAx{A: Cat}{X1 X2 Y: A}(f: Hom X1 Y)(g: Hom X2 Y):
     FunAx (pullbackFunSig f g).
 Proof.
   split.
@@ -461,8 +470,10 @@ Proof.
     try apply (ident_r A); apply (ident_l A).
 Qed.
 
-Polymorphic Definition pullbackFun{A: Cat}{X Y Z: A}(f: Hom X Z)(g: Hom Y Z):
-    Fun pullbackSig A := {| funAx := pullbackFunAx f g |}.
+Polymorphic Definition pullbackFun{A: Cat}{X1 X2 Y: A}(f: Hom X1 Y)(g: Hom X2 Y):
+    Fun pullbackSig A := {|
+  funAx := pullbackFunAx f g
+|}.
 
 
 
@@ -481,7 +492,9 @@ Proof.
   intros X Y Z _ _ _ _ _ _. auto.
 Qed.
 
-Polymorphic Definition product(I: Type): Cat := {| catAx := productAx I |}.
+Polymorphic Definition product(I: Type): Cat := {|
+  catAx := productAx I
+|}.
 
 Polymorphic Definition productFunSig{I: Type}{A: CatSig}(X: I -> A):
     FunSig (productSig I) A := {|
@@ -500,7 +513,9 @@ Proof.
 Qed.
 
 Polymorphic Definition productFun{I: Type}{A: Cat}(X: I -> A):
-    FunSig (productSig I) A := {| funAx := productFunAx X |}.
+    FunSig (productSig I) A := {|
+  funAx := productFunAx X
+|}.
 
 
 

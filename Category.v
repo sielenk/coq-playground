@@ -188,7 +188,62 @@ Proof.
   apply (assoc B).
 Qed.
 
-Polymorphic Definition FUN(A B: Cat): Cat := {| catAx  := FUNAx A B |}.
+Polymorphic Definition FUN(A B: Cat): Cat := {|
+  catAx  := FUNAx A B
+|}.
+
+
+Polymorphic Definition funId(A: Cat): Fun A A.
+  refine {| funSig := {| fmap_o X := X; fmap X Y f := f |} |}.
+  split.
+  intros X Y f f' H1.
+  assumption.
+  intros X.
+  reflexivity.
+  intros X Y Z g h.
+  reflexivity.
+Defined.
+
+Polymorphic Definition funComp{A B C: Cat}(G: Fun B C)(F: Fun A B): Fun A C.
+  refine {| funSig := {| fmap_o X := G (F X); fmap X Y f := fmap G (fmap F f) |} |}.
+  split.
+  intros X Y f f' H1.
+  apply (fmap_eq G).
+  apply (fmap_eq F).
+  assumption.
+  intros X.
+  simpl. transitivity (fmap G (id (F X))).
+  f_equiv.
+  apply (fmap_id F).
+  apply (fmap_id G).
+  intros X Y Z g f.
+  simpl. transitivity (fmap G (comp (fmap F g) (fmap F f))).
+  f_equiv.
+  apply (fmap_comp F).
+  apply (fmap_comp G).
+Defined.
+
+Polymorphic Definition CAT: CatSig := {|
+  Ob         := Cat;
+  Hom        := Fun;
+  id         := funId;
+  comp _ _ _ := funComp;
+  eq_h A B   := @isomorphic (FUN A B)
+|}.
+
+
+
+Polymorphic Record AdjointSig{A B: Cat}(F: Fun B A)(G: Fun A B) := {
+  epsilon: NatTrans (funComp F G) (funId A);
+  eta    : NatTrans (funId B) (funComp G F)
+}.
+
+Polymorphic Record AdjointAx{A B F G}(S: @AdjointSig A B F G): Prop := {
+  foo: forall Y, eq_h (id (F Y)) (comp (epsilon _ _ S (F Y)) (fmap F (eta _ _ S Y)))
+}.
+
+
+
 
 
 
@@ -583,43 +638,11 @@ Defined.
 
 
 
-Polymorphic Definition funId(A: Cat): Fun A A.
-  refine {| funSig := {| fmap_o X := X; fmap X Y f := f |} |}.
-  split.
-  intros X Y f f' H1.
-  assumption.
-  intros X.
-  reflexivity.
-  intros X Y Z g h.
-  reflexivity.
-Defined.
+  .
 
-Polymorphic Definition funComp(A B C: Cat)(G: Fun B C)(F: Fun A B): Fun A C.
-  refine {| funSig := {| fmap_o X := G (F X); fmap X Y f := fmap G (fmap F f) |} |}.
-  split.
-  intros X Y f f' H1.
-  apply (fmap_eq G).
-  apply (fmap_eq F).
-  assumption.
-  intros X.
-  simpl. transitivity (fmap G (id (F X))).
-  f_equiv.
-  apply (fmap_id F).
-  apply (fmap_id G).
-  intros X Y Z g f.
-  simpl. transitivity (fmap G (comp (fmap F g) (fmap F f))).
-  f_equiv.
-  apply (fmap_comp F).
-  apply (fmap_comp G).
-Defined.
 
-Polymorphic Definition CAT: CatSig := {|
-  Ob       := Cat;
-  Hom      := Fun;
-  id       := funId;
-  comp     := funComp;
-  eq_h A B := @isomorphic (FUN A B)
-|}.
+
+
 
 
 Polymorphic Definition CiCSig: CatSig := {|
@@ -646,6 +669,10 @@ Proof.
   apply Hg.
 Defined.
 
+Definition CiC: Cat := {|
+  catAx := CiCAx
+|}.
+
 
 
 Definition xxOb(F: FUN equalizer CiC): CiC :=
@@ -661,7 +688,8 @@ Definition xxHom{F G: FUN equalizer CiC}: Hom F G -> Hom (xxOb F) (xxOb G).
 Defined.
 
 Definition xx: Fun (FUN equalizer CiC) CiC.
-  refine {| preFun := {| fmap_o := xxOb; fmap X Y := xxHom |} |}.
+  refine {| funSig := {| fmap_o := xxOb; fmap X Y := xxHom |} |}.
+  split.
   intros F G [X HX] [Y HY] HH.
   simpl in * |- *.
   intros [Z HZ]. simpl in HX.

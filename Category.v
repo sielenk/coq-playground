@@ -154,43 +154,49 @@ Polymorphic Definition natTransComp{A B: Cat}{F G H: Fun A B}:
   apply (assoc B).
 Defined.
 
-Polymorphic Definition FUNSig(A B: Cat): CatSig := {|
-  Ob                 := Fun A B;
-  Hom                := NatTrans;
-  id                 := natTransId;
-  comp F G H         := natTransComp;
-  eq_h F G eta1 eta2 := forall X, eq_h (eta1 X) (eta2 X)
-|}.
 
-Polymorphic Lemma FUNAx(A B: Cat): CatAx (FUNSig A B).
-Proof.
-  split.
-  intros F G.
-  split.
-  intros f X.
-  reflexivity.
-  intros f g H X.
-  symmetry.
-  apply H.
-  intros f g h H1 H2 X.
-  transitivity (g X).
-  apply H1.
-  apply H2.
-  intros F G H f f' H1 g g' H2 X.
-  apply (comp_eq B).
-  apply H1.
-  apply H2.
-  intros F G f X.
-  apply (ident_r B).
-  intros F G f X.
-  apply (ident_l B).
-  intros F G H I h g f X.
-  apply (assoc B).
-Qed.
 
-Polymorphic Definition FUN(A B: Cat): Cat := {|
-  catAx  := FUNAx A B
-|}.
+Section functor_category.
+  Polymorphic Variables A B: Cat.
+
+  Polymorphic Definition FUNSig: CatSig := {|
+    Ob                 := Fun A B;
+    Hom                := NatTrans;
+    id                 := natTransId;
+    comp F G H         := natTransComp;
+    eq_h F G eta1 eta2 := forall X, eq_h (eta1 X) (eta2 X)
+  |}.
+
+  Polymorphic Lemma FUNAx: CatAx FUNSig.
+  Proof.
+    split.
+    intros F G.
+    split.
+    intros f X.
+    reflexivity.
+    intros f g H X.
+    symmetry.
+    apply H.
+    intros f g h H1 H2 X.
+    transitivity (g X).
+    apply H1.
+    apply H2.
+    intros F G H f f' H1 g g' H2 X.
+    apply (comp_eq B).
+    apply H1.
+    apply H2.
+    intros F G f X.
+    apply (ident_r B).
+    intros F G f X.
+    apply (ident_l B).
+    intros F G H I h g f X.
+    apply (assoc B).
+  Qed.
+
+  Polymorphic Definition FUN: Cat := {|
+    catAx  := FUNAx
+  |}.
+End functor_category.
 
 
 Polymorphic Definition funId(A: Cat): Fun A A.

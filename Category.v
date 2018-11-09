@@ -783,6 +783,27 @@ Section comma_category.
   Polymorphic Definition CommaCodFun: Fun CommaCat B := {|
     funAx := CommaCodFunAx
   |}.
+
+
+  Polymorphic Definition CommaHomFunSig: FunSig CommaCat (FUN two C).
+    refine {|
+      fmap_o(X: Ob CommaCat) := twoFun (commaOb_f X): Ob (FUN two C)
+    |}.
+    intros X Y [f1 f2 Hf].
+    set (g1 := commaOb_f X)in Hf |- *.
+    set (g2 := commaOb_f Y)in Hf |- *.
+    refine {|
+      preNatTrans(X': Ob two) :=
+        if X' return Hom (twoFun g1 X') (twoFun g2 X')
+          then fmap T f2
+          else fmap S f1
+    |}.
+    intros [|] [|] []; simpl; try assumption;
+    [transitivity (fmap T f2) | transitivity (fmap S f1)];
+    try apply (ident_l C);
+    symmetry;
+    apply (ident_r C).
+  Defined.
 End comma_category.
 
 Arguments CommaCat{_ _ _}.

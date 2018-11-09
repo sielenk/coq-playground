@@ -804,17 +804,30 @@ Section comma_category.
     symmetry;
     apply (ident_r C).
   Defined.
+
+  Polymorphic Lemma CommaHomFunAx: FunAx CommaHomFunSig.
+  Proof.
+    split.
+    intros X Y [f1a f1b Hf1] [f2a f2b Hf2] [Hfa Hfb] [|]; simpl in Hfa, Hfb |- *.
+    apply (fmap_eq T). assumption.
+    apply (fmap_eq S). assumption.
+    intros X [|].
+    apply (fmap_id T).
+    apply (fmap_id S).
+    intros X Y Z [g1 g2 Hg] [f1 f2 Hf] [|]; simpl.
+    apply (fmap_comp T).
+    apply (fmap_comp S).
+  Qed.
+
+  Polymorphic Definition CommaHomFun: Fun CommaCat (FUN two C) := {|
+    funAx := CommaHomFunAx
+  |}.
 End comma_category.
 
 Arguments CommaCat{_ _ _}.
 Arguments CommaCodFun{_ _ _}.
 Arguments CommaDomFun{_ _ _}.
-
-
-  .
-
-
-
+Arguments CommaHomFun{_ _ _}.
 
 
 

@@ -31,7 +31,8 @@ Defined.
 
 Polymorphic Definition deltaHom A {B: Cat}{X Y: B}(f: Hom X Y):
     Hom (deltaOb A X) (deltaOb A Y).
-  refine {| preNatTrans a := f: Hom (deltaOb A X a) (deltaOb A Y a) |}.
+  refine {| natTrans a := f: Hom (deltaOb A X a) (deltaOb A Y a) |}.
+  unfold natural.
   simpl.
   intros _ _ _.
   transitivity f.

@@ -161,7 +161,7 @@ Section comma_category.
     set (g1 := commaOb_f X)in Hf |- *.
     set (g2 := commaOb_f Y)in Hf |- *.
     refine {|
-      preNatTrans(X': Ob two) :=
+      natTrans(X': Ob two) :=
         if X' return Hom (twoFun g1 X') (twoFun g2 X')
           then fmap T f2
           else fmap S f1

@@ -1,7 +1,6 @@
 Require Import Coq.Relations.Relation_Definitions.
 Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Classes.Morphisms.
-Require Import Coq.Logic.Eqdep.
 
 Require Import Category.
 Require Import Functor.
@@ -300,32 +299,34 @@ Polymorphic Definition productSig(I: Type): CatSig := {|
   Hom X Y        := X = Y: Type;
   id X           := eq_refl X;
   comp X Y Z g f := eq_trans f g;
-  eq_h _ _ _ _   := True
+  eq_h _ _       := eq
 |}.
 
 Polymorphic Lemma productAx(I: Type): CatAx (productSig I).
 Proof.
   split; simpl; try auto.
-  intros X Y; split; auto.
-  intros X Y Z _ _ _ _ _ _. auto.
+  intros X Y. apply eq_equivalence.
+  intros X Y Z g1 g2 [] f1 f2 []. reflexivity.
+  intros X Y []. reflexivity.
+  intros W X Y Z [] [] []. reflexivity.
 Qed.
 
 Polymorphic Definition product(I: Type): Cat := {|
   catAx := productAx I
 |}.
 
-Polymorphic Definition productFunSig{I: Type}{A: CatSig}(X: I -> A):
+Polymorphic Definition productFunSig{I: Type}{A: CatSig}(Xi: I -> A):
     FunSig (productSig I) A := {|
-  fmap_o       := X: product I -> A;
+  fmap_o       := Xi: product I -> A;
   fmap I1 I2 H := match H in _ = I2' with eq_refl => id _ end
 |}.
 
-Polymorphic Lemma productFunAx{I: Type}{A: Cat}(X: I -> A):
-    FunAx (productFunSig X).
+Polymorphic Lemma productFunAx{I: Type}{A: Cat}(Xi: I -> A):
+    FunAx (productFunSig Xi).
 Proof.
   split; simpl; try reflexivity.
-  intros Y Z [] H _.
-  rewrite (UIP_refl I Y H). reflexivity.
+  intros Y Z [] H [].
+  reflexivity.
   intros W Y Z [] []. simpl.
   symmetry. apply (ident_r A).
 Qed.

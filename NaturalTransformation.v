@@ -17,10 +17,11 @@ Polymorphic Record NatTrans{A B}{F G: FunSig A B} := {
 Arguments NatTrans {_ _} _ _.
 
 
-Polymorphic Definition iso_natural{A}{B: Cat}{F G: FunSig A B}
+Polymorphic Lemma iso_natural{A}{B: Cat}{F G: FunSig A B}
     (iso: forall X, Iso (F X) (G X)):
     natural (fun X => iso_hom (iso X)) -> 
     natural (fun X => iso_inv (iso X)).
+Proof.
   intros H X Y f.
   set (gX := iso_hom (iso X)).
   set (hX := iso_inv (iso X)).
@@ -50,4 +51,4 @@ Polymorphic Definition iso_natural{A}{B: Cat}{F G: FunSig A B}
   f_equiv.
   apply iso_prop.
   apply (ident_r B).
-Defined.
+Qed.

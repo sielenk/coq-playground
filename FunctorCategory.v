@@ -77,7 +77,7 @@ Section functor_category.
   Polymorphic Definition fun_iso(F G: FUN)
       (iso: forall X, Iso (F X) (G X))
       (Hnat: natural iso):
-      @Iso FUN F G.
+      Iso F G.
     refine {|
       iso_hom := {|
         natTrans X := iso_hom (iso X);
@@ -91,7 +91,6 @@ Section functor_category.
     simpl.
     split; intro X; apply (iso_prop _).
   Defined.
-
 End functor_category.
 
 Arguments natTransId   {_ _}.

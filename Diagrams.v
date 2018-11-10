@@ -109,9 +109,9 @@ Definition two: Cat := {|
 Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A := {|
   fmap_o     := fun(X': two) => if X' then Y else X;
   fmap X' Y' := match X', Y' with
-                | false, false => fun _ => id X
-                | true, true   => fun _ => id Y
-                | false, true  => fun _ => f
+                | false, false => fun _  => id X
+                | true, true   => fun _  => id Y
+                | false, true  => fun _  => f
                 | true, false  => fun f' => match f' with end
                 end
 |}.

@@ -196,3 +196,27 @@ Polymorphic Record terminal{A: CatSig}{Y: A} := {
 }.
 
 Arguments terminal{_} _.
+
+
+Polymorphic Definition opSig(A: CatSig): CatSig := {|
+  Ob             := A;
+  Hom X Y        := Hom Y X;
+  id             := id;
+  comp X Y Z g f := comp f g;
+  eq_h X Y f g   := eq_h g f;
+|}.
+
+Polymorphic Definition opAx(A: Cat): CatAx (opSig A).
+  split; intros.
+  split. intro f. simpl. reflexivity.
+  intros f g H. simpl. symmetry. apply H.
+  intros f g h H1 H2. simpl. transitivity g; assumption.
+  intros f f' Hf g g' Hg. simpl. apply (comp_eq A); assumption.
+  simpl. symmetry. apply (ident_l A).
+  simpl. symmetry. apply (ident_r A).
+  simpl. apply (assoc A).
+Defined.
+
+Polymorphic Definition op(A: Cat): Cat := {|
+  catAx := opAx A
+|}.

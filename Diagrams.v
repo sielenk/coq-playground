@@ -5,7 +5,8 @@ Require Import Coq.Logic.Eqdep.
 
 Require Import Category.
 Require Import Functor.
-
+Require Import MetaCategory.
+Require Import NaturalTransformation.
 
 
 
@@ -333,3 +334,67 @@ Polymorphic Definition productFun{I: Type}{A: Cat}(X: I -> A):
     FunSig (productSig I) A := {|
   funAx := productFunAx X
 |}.
+
+
+
+
+Definition zero_initial: initial (zero: CAT).
+  refine {|
+    initial_hom(Y: CAT) := zeroFun Y: @Hom CAT zero Y
+  |}.
+  intros A F.
+  eexists.
+  eexists.
+  split; intros [].
+
+  Unshelve.
+
+  refine {| natTrans(X: zero) := match X with end |}.
+  intros [].
+
+  refine {| natTrans(X: zero) := match X with end |}.
+  intros [].
+Defined.
+
+Definition one_terminal: terminal (one: CAT).
+  refine {|
+    terminal_hom(A: CAT) := {|
+      funSig := {|
+        fmap_o(_: A) := tt: one;
+        fmap _ _ _ := tt
+      |}
+    |}: @Hom CAT A one
+  |}.
+  intros A F.
+  apply iso_isomorphic.
+  refine {|
+    iso_hom := _;
+    iso_inv := _
+  |}.
+
+  destruct F as [[] ].
+  simpl.
+  split; auto.
+
+  Unshelve.
+
+  split; simpl; auto.
+
+  intros X Y f1 f2 Hf; auto.
+
+  simpl.
+  refine {| natTrans := _ |}.
+  unfold natural. simpl. intros. auto.
+
+  simpl.
+  refine {| natTrans := _ |}.
+  unfold natural. simpl. intros. auto.
+
+  Unshelve.
+
+  simpl.
+  intros. apply tt.
+
+  simpl.
+  intros. apply tt.
+Defined.

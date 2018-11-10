@@ -3,3 +3,4 @@
 .*.aux
 *.glob
 *.beautified
+*.crashcoqide

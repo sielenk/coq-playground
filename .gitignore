@@ -1,2 +1,5 @@
-*#
+*.vo
 *~
+.*.aux
+*.glob
+*.beautified

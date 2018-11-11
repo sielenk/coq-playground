@@ -73,10 +73,11 @@ Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A :=
                      | twoX => X
                      | twoY => Y
                      end;
-  fmap X' Y' f'   := match f' with
-                     | twoIdX => id X
-                     | twoIdY => id Y
-                     | twoF   => f
+  fmap X' Y'      := match X', Y' with
+                     | twoX, twoX => fun _ => id X
+                     | twoX, twoY => fun _ => f
+                     | twoY, twoY => fun _ => id Y
+                     | twoY, twoX => fun f => match no_twoYX f with end
                      end
 |}.
 
@@ -86,14 +87,10 @@ Proof.
   intros X' Y' g1 g2 []. reflexivity.
   intros []; reflexivity.
   intros [] Y' Z' [] f'.
-  rewrite (two_thin f' twoIdX).
   symmetry. apply (ident_r A).
-  rewrite (two_thin f' twoF).
   symmetry. apply (ident_l A).
-  rewrite (two_thin f' twoIdX).
   symmetry. apply (ident_r A).
   destruct (no_twoYX f').
-  rewrite (two_thin f' twoIdY).
   symmetry. apply (ident_r A).
   destruct (no_twoYX f').
 Qed.

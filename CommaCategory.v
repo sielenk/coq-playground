@@ -168,13 +168,9 @@ Section comma_category.
     |}.
     intros [|] [|];
     intro f; try destruct (no_twoYX f); try assumption.
-    rewrite (two_thin f twoIdX).
     transitivity (fmap S f1).
     apply (ident_l C).
-    symmetry; apply (ident_r C).
-    rewrite (two_thin f twoF).
-    assumption.
-    rewrite (two_thin f twoIdY).
+    symmetry. apply (ident_r C).
     transitivity (fmap T f2).
     apply (ident_l C).
     symmetry; apply (ident_r C).

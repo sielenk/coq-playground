@@ -5,72 +5,8 @@ Require Import Coq.Classes.Morphisms.
 Require Import Category.
 Require Import Functor.
 Require Import MetaCategory.
+Require Import FunctorCategory.
 Require Import NaturalTransformation.
-
-
-
-Definition zeroSig: CatSig := {|
-  Ob             := Empty_set: Type;
-  Hom _ _        := Empty_set: Type;
-  id X           := match X with end;
-  comp _ Y _ _ _ := match Y with end;
-  eq_h _ _ _ _   := True
-|}.
-
-Lemma zeroAx: CatAx zeroSig.
-Proof.
-  split; simpl; intros [].
-Qed.
-
-Definition zero: Cat := {| catAx := zeroAx |}.
-
-Polymorphic Definition zeroFunSig A: FunSig zeroSig A := {|
-  fmap_o(X: Ob zero) := match X with end;
-  fmap X Y f         := match f with end
-|}.
-
-Polymorphic Lemma zeroFunAx A: FunAx (zeroFunSig A).
-Proof.
-  split; simpl; intros [].
-Qed.
-
-Polymorphic Definition zeroFun A: Fun zeroSig A :=
-  {| funAx := zeroFunAx A |}.
-
-
-
-Definition oneSig: CatSig := {|
-  Ob             := unit: Type;
-  Hom _ _        := unit: Type;
-  id _           := tt;
-  comp _ _ _ _ _ := tt;
-  eq_h _ _ _ _   := True
-|}.
-
-Lemma oneAx: CatAx oneSig.
-Proof.
-  split; simpl; split; repeat intros []; try apply I.
-Qed.
-
-Definition one: Cat := {| catAx := oneAx |}.
-
-Polymorphic Definition oneFunSig{A: CatSig}(X: Ob A): FunSig one A := {|
-  fmap_o _   := X;
-  fmap _ _ _ := id X
-|}.
-
-Polymorphic Lemma oneFunAx{A: Cat}(W: Ob A): FunAx (oneFunSig W).
-Proof.
-  split; simpl; intros.
-  intros f f' Hf.
-  reflexivity.
-  reflexivity.
-  symmetry. apply (ident_r A).
-Qed.
-
-Polymorphic Definition oneFun{A: Cat}(X: Ob A): Fun one A := {|
-  funAx := oneFunAx X
-|}.
 
 
 
@@ -331,12 +267,34 @@ Proof.
   symmetry. apply (ident_r A).
 Qed.
 
-Polymorphic Definition productFun{I: Type}{A: Cat}(X: I -> A):
-    FunSig (productSig I) A := {|
-  funAx := productFunAx X
+Polymorphic Definition productFun{I: Type}{A: Cat}(Xi: I -> A):
+    Fun (productSig I) A := {|
+  funAx := productFunAx Xi
 |}.
 
 
+Inductive ZeroOb: Type := .
+Definition zero: Cat := product ZeroOb.
+Polymorphic Definition zeroFun(A: Cat): Fun zero A :=
+  productFun (fun I: zero => match I with end).
+
+
+Inductive OneOb: Type := oneOb_.
+Definition one: Cat := product OneOb.
+Polymorphic Definition oneFun{A: Cat}(X: Ob A): Fun one A :=
+  productFun (fun I: one => X).
+
+Definition oneOb : one := oneOb_.
+Definition oneHom: @Hom one oneOb oneOb := eq_refl.
+
+Definition oneOb_isomorphic(X Y: one): Iso X Y.
+  destruct X, Y.
+  refine {|
+    iso_hom := oneHom;
+    iso_inv := oneHom
+  |}.
+  split; reflexivity.
+Defined.
 
 
 Definition zero_initial: initial (zero: CAT).
@@ -357,45 +315,36 @@ Definition zero_initial: initial (zero: CAT).
   intros [].
 Defined.
 
+
+Polymorphic Definition oneTerminalFunSig(A: CatSig): FunSig A one := {|
+  fmap_o(_: A) := oneOb;
+  fmap _ _ _   := oneHom
+|}.
+
+Polymorphic Lemma oneTerminalFunAx(A: CatSig): FunAx (oneTerminalFunSig A).
+Proof.
+  split.
+  intros X Y f1 f2 Hf. reflexivity.
+  intros X. reflexivity.
+  intros X Y Z g f. reflexivity.
+Qed.
+
+Polymorphic Definition oneTerminalFun(A: CatSig): Fun A one := {|
+  funAx := oneTerminalFunAx A
+|}.
+
 Definition one_terminal: terminal (one: CAT).
   refine {|
-    terminal_hom(A: CAT) := {|
-      funSig := {|
-        fmap_o(_: A) := tt: one;
-        fmap _ _ _ := tt
-      |}
-    |}: @Hom CAT A one
+    terminal_hom(A: CAT) := oneTerminalFun A: @Hom CAT A one
   |}.
   intros A F.
+
   apply iso_isomorphic.
-  refine {|
-    iso_hom := _;
-    iso_inv := _
-  |}.
+  apply (fun_iso (oneTerminalFun A) F (fun X: A => oneOb_isomorphic _ _)).
 
-  destruct F as [[] ].
-  simpl.
-  split; auto.
-
-  Unshelve.
-
-  split; simpl; auto.
-
-  intros X Y f1 f2 Hf; auto.
-
-  simpl.
-  refine {| natTrans := _ |}.
-  unfold natural. simpl. intros. auto.
-
-  simpl.
-  refine {| natTrans := _ |}.
-  unfold natural. simpl. intros. auto.
-
-  Unshelve.
-
-  simpl.
-  intros. apply tt.
-
-  simpl.
-  intros. apply tt.
+  intros X Y f.
+  generalize (fmap F f). intros [].
+  generalize (fmap (oneTerminalFun A) f). intros [].
+  generalize (oneOb_isomorphic ((oneTerminalFun A) X) (F X)). intros [[]].
+  reflexivity.
 Defined.

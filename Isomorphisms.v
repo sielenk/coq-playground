@@ -18,8 +18,8 @@ Section isomorphic_A1_A.
   Polymorphic Let A1 := FUN one A.
 
   Polymorphic Definition fun_A1_A_Sig: FunSig A1 A := {|
-    fmap_o(X: A1) := X tt;
-    fmap X Y f    := f tt
+    fmap_o(X: A1) := X oneOb;
+    fmap X Y f    := f oneOb
   |}.
 
   Polymorphic Lemma fun_A1_A_Ax: FunAx fun_A1_A_Sig.
@@ -42,11 +42,11 @@ Section isomorphic_A1_A.
 
   Polymorphic Definition iso_A1_1(F: A1)(X: one): Iso (id1 F X) (id2 F X).
     refine {|
-      iso_hom := match X as u return (Hom (F tt) (F u)) with
-                 | tt => id (F tt)
+      iso_hom := match X as u return (Hom (F oneOb) (F u)) with
+                 | oneOb_ => id (F oneOb)
                  end;
-      iso_inv := match X as u return (Hom (F u) (F tt)) with
-                 | tt => id (F tt)
+      iso_inv := match X as u return (Hom (F u) (F oneOb)) with
+                 | oneOb_  => id (F oneOb)
                  end
     |}.
     destruct X; split; apply (ident_r A).
@@ -57,10 +57,11 @@ Section isomorphic_A1_A.
 
     intros [] [] [].
     simpl.
-    transitivity (id (F tt)).
-    transitivity (@fmap oneSig A F tt tt tt).
+    transitivity (id (F oneOb)).
+    transitivity (@fmap one A F _ _ oneHom).
     apply (ident_r A).
-    apply (fmap_id F).
+    unfold A1 in F. simpl in F.
+    apply (fmap_id (F: Fun _ _)).
     symmetry. apply (ident_r A).
   Defined.
 
@@ -69,7 +70,7 @@ Section isomorphic_A1_A.
 
     intros X Y f [].
     simpl.
-    transitivity (f tt).
+    transitivity (f oneOb).
     apply (ident_r A).
     symmetry. apply (ident_l A).
   Defined.

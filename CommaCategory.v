@@ -163,28 +163,35 @@ Section comma_category.
     refine {|
       natTrans(X': Ob two) :=
         if X' return Hom (twoFun g1 X') (twoFun g2 X')
-          then fmap T f2
-          else fmap S f1
+          then fmap S f1
+          else fmap T f2
     |}.
-    intros [|] [|] []; simpl; try assumption;
-    [transitivity (fmap T f2) | transitivity (fmap S f1)];
-    try apply (ident_l C);
-    symmetry;
-    apply (ident_r C).
+    intros [|] [|];
+    intro f; try destruct (no_twoYX f); try assumption.
+    rewrite (two_thin f twoIdX).
+    transitivity (fmap S f1).
+    apply (ident_l C).
+    symmetry; apply (ident_r C).
+    rewrite (two_thin f twoF).
+    assumption.
+    rewrite (two_thin f twoIdY).
+    transitivity (fmap T f2).
+    apply (ident_l C).
+    symmetry; apply (ident_r C).
   Defined.
 
   Polymorphic Lemma CommaHomFunAx: FunAx CommaHomFunSig.
   Proof.
     split.
     intros X Y [f1a f1b Hf1] [f2a f2b Hf2] [Hfa Hfb] [|]; simpl in Hfa, Hfb |- *.
-    apply (fmap_eq T). assumption.
     apply (fmap_eq S). assumption.
+    apply (fmap_eq T). assumption.
     intros X [|].
-    apply (fmap_id T).
     apply (fmap_id S).
+    apply (fmap_id T).
     intros X Y Z [g1 g2 Hg] [f1 f2 Hf] [|]; simpl.
-    apply (fmap_comp T).
     apply (fmap_comp S).
+    apply (fmap_comp T).
   Qed.
 
   Polymorphic Definition CommaHomFun: Fun CommaCat (FUN two C) := {|

@@ -9,32 +9,59 @@ Require Import FunctorCategory.
 Require Import NaturalTransformation.
 
 
+Inductive twoOb : Type := twoX | twoY.
+Inductive twoHom: twoOb -> twoOb -> Type :=
+  | twoIdX: twoHom twoX twoX
+  | twoIdY: twoHom twoY twoY
+  | twoF  : twoHom twoX twoY
+  .
+
+Definition no_twoYX(f: twoHom twoY twoX): False :=
+  match f in twoHom X' Y'
+  return match X', Y' with twoY, twoX => False | _, _ => True end
+  with twoIdX => I | twoIdY => I | twoF => I end.
+
+Lemma two_thin{X Y}(f1 f2: twoHom X Y): f1 = f2.
+Proof.
+  set (H X' Y' := match X', Y' return twoHom X' Y' -> twoHom X' Y' with
+     | twoX, twoX => fun _ => twoIdX
+     | twoX, twoY => fun _ => twoF
+     | twoY, twoY => fun _ => twoIdY
+     | twoY, twoX => fun f => match no_twoYX f with end
+     end).
+  transitivity (H _ _ f1).
+  destruct f1; reflexivity.
+  destruct f2; reflexivity.
+Qed.
 
 Definition twoSig: CatSig := {|
-  Ob             := bool: Type;
-  Hom X Y        := match X, Y with
-                    | true, false => Empty_set
-                    | _, _        => unit
-                    end: Type;
+  Ob             := twoOb;
+  Hom            := twoHom;
   id X           := match X with
-                    | false => tt
-                    | true  => tt
+                    | twoX => twoIdX
+                    | twoY => twoIdY
                     end;
-  comp X Y Z     := match X, Z with
-                    | true, false => match Y with
-                                     | true  => fun g _ => match g with end
-                                     | false => fun _ f => match f with end
-                                     end
-                    | _, _        => fun _ _ => tt
+  comp X Y Z g   := match g in twoHom Y' Z' return twoHom X Y' -> twoHom X Z' with
+                    | twoIdX => fun f => f
+                    | twoIdY => fun f => f
+                    | twoF   => match X with
+                                | twoX => fun f => twoF
+                                | twoY => fun f => match no_twoYX f with end
+                                end
                     end;
-  eq_h _ _ _ _   := True
+  eq_h _ _       := eq
 |}.
 
 Lemma twoAx: CatAx twoSig.
 Proof.
-  split; simpl; try auto.
-  intros X Y; split; auto.
-  intros X Y Z _ _ _ _ _ _. auto.
+  split; try auto.
+  intros X Y. apply eq_equivalence.
+  intros X Y Z g1 g2 [] f1 f2 []. reflexivity.
+  intros X Y []; reflexivity.
+  intros X Y []; reflexivity.
+  intros W X Y Z [] g f; try reflexivity.
+  destruct f; try destruct (no_twoYX g).
+  reflexivity.
 Qed.
 
 Definition two: Cat := {|
@@ -42,34 +69,33 @@ Definition two: Cat := {|
 |}.
 
 Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A := {|
-  fmap_o     := fun(X': two) => if X' then Y else X;
-  fmap X' Y' := match X', Y' with
-                | false, false => fun _  => id X
-                | true, true   => fun _  => id Y
-                | false, true  => fun _  => f
-                | true, false  => fun f' => match f' with end
-                end
+  fmap_o(X': two) := match X' with
+                     | twoX => X
+                     | twoY => Y
+                     end;
+  fmap X' Y' f'   := match f' with
+                     | twoIdX => id X
+                     | twoIdY => id Y
+                     | twoF   => f
+                     end
 |}.
 
 Polymorphic Lemma twoFunAx{A: Cat}{X Y: A}(f: Hom X Y): FunAx (twoFunSig f).
 Proof.
   split.
-  intros [|] [|] f1 f2 Hf; simpl; try reflexivity.
-  destruct f1.
-  intros [|]; reflexivity.
-  intros [|] [|] [|] g' f'; simpl.
-  symmetry.
-  apply (ident_r A).
-  destruct g'.
-  destruct f'.
-  destruct f'.
-  symmetry.
-  apply (ident_l A).
-  destruct g'.
-  symmetry.
-  apply (ident_r A).
-  symmetry.
-  apply (ident_r A).
+  intros X' Y' g1 g2 []. reflexivity.
+  intros []; reflexivity.
+  intros [] Y' Z' [] f'.
+  rewrite (two_thin f' twoIdX).
+  symmetry. apply (ident_r A).
+  rewrite (two_thin f' twoF).
+  symmetry. apply (ident_l A).
+  rewrite (two_thin f' twoIdX).
+  symmetry. apply (ident_r A).
+  destruct (no_twoYX f').
+  rewrite (two_thin f' twoIdY).
+  symmetry. apply (ident_r A).
+  destruct (no_twoYX f').
 Qed.
 
 Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A := {|

@@ -16,7 +16,7 @@ Definition vertex{D A: Cat}{F: Fun D A}: Fun (Cone F) A :=
   CommaDomFun _ _.
 
 Definition foo{D A: Cat}{F: Fun D A}(L: Cone F): NatTrans (deltaOb D (vertex L)) F :=
-  fmap (CommaHomFun _ _ L) (tt: @Hom two false true).
+  fmap (CommaHomFun _ _ L) twoF.
 
 Lemma bar{D A: Cat}{F: Fun D A}(L: Cone F):
     forall{X Y: D}(f: Hom X Y),  eq_h (comp (fmap F f) (foo L X)) (foo L Y).

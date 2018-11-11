@@ -37,7 +37,7 @@ Section functor_category.
 
 
   Polymorphic Definition FUNSig: CatSig := {|
-    Ob                 := FunSig A B;
+    Ob                 := Fun A B;
     Hom                := NatTrans;
     id                 := natTransId;
     comp F G H         := natTransComp;

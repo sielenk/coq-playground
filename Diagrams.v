@@ -72,8 +72,9 @@ Proof.
   apply (ident_r A).
 Qed.
 
-Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A :=
-  {| funAx := twoFunAx f |}.
+Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A := {|
+  funAx := twoFunAx f
+|}.
 
 
 

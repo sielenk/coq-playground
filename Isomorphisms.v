@@ -9,7 +9,6 @@ Require Import NaturalTransformation.
 Require Import FunctorCategory.
 Require Import MetaCategory.
 Require Import Diagrams.
-Require Import Delta.
 
 
 Section isomorphic_A1_A.
@@ -37,8 +36,8 @@ Section isomorphic_A1_A.
     funAx := fun_A1_A_Ax
   |}.
 
-  Polymorphic Let id1 := comp (A := CATSig) (delta one A) fun_A1_A: FUN A1 A1.
-  Polymorphic Let id2 := id   (A := CATSig) A1:                     FUN A1 A1.
+  Polymorphic Let id1 := comp (A := CATSig) (oneFun A) fun_A1_A: FUN A1 A1.
+  Polymorphic Let id2 := id   (A := CATSig) A1:                  FUN A1 A1.
 
   Polymorphic Definition iso_A1_1(F: A1)(X: one): Iso (id1 F X) (id2 F X).
     refine {|
@@ -78,7 +77,7 @@ Section isomorphic_A1_A.
   Polymorphic Definition iso_A1_A: @Iso CATSig A1 A.
     refine {|
       iso_hom := fun_A1_A: @Hom CATSig _ _;
-      iso_inv := delta _ _
+      iso_inv := oneFun _
     |}.
 
     split.

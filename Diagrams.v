@@ -305,8 +305,33 @@ Polymorphic Definition zeroFun(A: Cat): Fun zero A :=
 
 Inductive OneOb: Type := oneOb_.
 Definition one: Cat := product OneOb.
-Polymorphic Definition oneFun{A: Cat}(X: Ob A): Fun one A :=
-  productFun (fun I: one => X).
+
+Polymorphic Definition oneFunSig(A: Cat): FunSig A (FUN one A).
+  set (fmap_o X := productFun (fun I: one => X): FUN one A).
+  refine {|
+    fmap_o     := fmap_o;
+    fmap X Y f := {|
+      natTrans Z := f: Hom (fmap_o X Z) (fmap_o Y Z);
+    |}
+  |}.
+
+  intros X' Y' []. simpl.
+  transitivity f.
+  apply (ident_l A).
+  symmetry. apply (ident_r A).
+Defined.
+
+Polymorphic Lemma oneFunAx(A: Cat): FunAx (oneFunSig A).
+Proof.
+  split.
+  intros X Y f1 f2 Hf X'. assumption.
+  intros X X'. reflexivity.
+  intros X Y Z g f X'. reflexivity.
+Qed.
+
+Polymorphic Definition oneFun(A: Cat): Fun A (FUN one A) := {|
+  funAx := oneFunAx A
+|}.
 
 Definition oneOb : one := oneOb_.
 Definition oneHom: @Hom one oneOb oneOb := eq_refl.

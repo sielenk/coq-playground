@@ -220,3 +220,12 @@ Defined.
 Polymorphic Definition op(A: Cat): Cat := {|
   catAx := opAx A
 |}.
+
+
+Polymorphic Definition id_iso{A: Cat}(X: A): Iso X X.
+  refine {|
+    iso_hom := id X;
+    iso_inv := id X
+  |}.
+  split; apply (ident_r A).
+Defined.

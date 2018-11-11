@@ -206,14 +206,17 @@ Definition pullbackSig: CatSig := {|
                     | _, Some false, Some true => fun g _ => match g with end
                     | _, _, _                  => fun _ _ => tt
                     end;
-  eq_h _ _ _ _   := True
+  eq_h _ _       := eq
 |}.
 
 Lemma pullbackAx: CatAx pullbackSig.
 Proof.
-  split; simpl; try auto.
-  intros X Y; split; auto.
-  intros X Y Z _ _ _ _ _ _. auto.
+  split. 
+  intros X Y. apply eq_equivalence.
+  intros X Y Z g1 g2 [] f1 f2 []. reflexivity.
+  intros [[]|] [[]|] []; reflexivity.
+  intros [[]|] [[]|] []; reflexivity.
+  intros [[]|] [[]|] [[]|] [[]|] [] [] []; reflexivity.
 Qed.
 
 Definition pullback: Cat := {|

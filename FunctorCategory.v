@@ -7,7 +7,7 @@ Require Export NaturalTransformation.
 Section functor_category.
   Polymorphic Variables(A: CatSig)(B: Cat).
 
-  Polymorphic Definition natTransId(F: Fun A B): NatTrans F F.
+  Polymorphic Definition natTransId(F: FunSig A B): NatTrans F F.
     refine {| natTrans X := id (F X) |}.
     intros X Y f.
     transitivity (fmap F f).
@@ -16,7 +16,7 @@ Section functor_category.
     apply (ident_l B).
   Defined.
 
-  Polymorphic Definition natTransComp{F G H: Fun A B}:
+  Polymorphic Definition natTransComp{F G H: FunSig A B}:
       NatTrans G H-> NatTrans F G -> NatTrans F H.
     intros eta1 eta2.
     refine {| natTrans X := comp (eta1 X) (eta2 X) |}.
@@ -37,7 +37,7 @@ Section functor_category.
 
 
   Polymorphic Definition FUNSig: CatSig := {|
-    Ob                 := Fun A B;
+    Ob                 := FunSig A B;
     Hom                := NatTrans;
     id                 := natTransId;
     comp F G H         := natTransComp;
@@ -74,7 +74,7 @@ Section functor_category.
     catAx  := FUNAx
   |}.
 
-  Polymorphic Definition fun_iso(F G: FUN)
+  Polymorphic Definition fun_iso(F G: FUNSig)
       (iso: forall X, Iso (F X) (G X))
       (Hnat: natural iso):
       Iso F G.

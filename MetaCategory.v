@@ -40,10 +40,34 @@ Polymorphic Definition funComp{A B C: Cat}(G: Fun B C)(F: Fun A B): Fun A C.
   apply (fmap_comp G).
 Defined.
 
-Polymorphic Definition CAT: CatSig := {|
+Polymorphic Definition CATSig: CatSig := {|
   Ob         := Cat;
   Hom        := Fun;
   id         := funId;
   comp _ _ _ := funComp;
   eq_h A B   := @isomorphic (FUN A B)
 |}.
+
+(*
+Polymorphic Lemma CATAx: CatAx CATSig.
+Proof.
+  split.
+  intros. simpl.
+  apply (@isomorphic_Equivalence (FUN X Y)).
+  intros X Y Z f1 f2 [fa [fb Hf]] g1 g2 [ga [gb Hg]].
+  apply iso_isomorphic.
+  eapply fun_iso.
+  intros X' Y' f'. simpl.
+  refine {|
+    iso_hom := _;
+    iso_inv := _
+  |}.
+  split; intro X'; simpl.
+  eapply fun_iso.
+  eexists. simpl in fa. (comp f2 g2).
+  eexists.
+  
+Qed.
+*)
+
+Polymorphic Definition CAT := CATSig.

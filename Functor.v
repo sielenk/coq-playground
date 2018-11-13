@@ -37,3 +37,50 @@ Polymorphic Definition faithful{A B}(F: FunSig A B): Prop :=
 
 Polymorphic Definition full{A B}(F: FunSig A B): Prop :=
   forall X Y (f: Hom (F X) (F Y)), exists f', f = fmap F f'.
+
+
+Lemma reflect_CatAx{A}{B: Cat}(F: Fun A B): faithful F -> CatAx A.
+Proof.
+  intro H.
+  split.
+  intros X Y; split; simpl.
+  intro f. apply H. reflexivity.
+  intros f g H'. apply H.
+  symmetry.
+  apply (fmap_eq F). assumption.
+  intros f g h H1 H2. apply H.
+  transitivity (fmap F g);
+  apply (fmap_eq F); assumption.
+  intros X Y Z g1 g2 Hg f1 f2 Hf. apply H.
+  transitivity (comp (fmap F g1) (fmap F f1)).
+  apply (fmap_comp F).
+  transitivity (comp (fmap F g2) (fmap F f2)).
+  f_equiv; apply (fmap_eq F); assumption.
+  symmetry. apply (fmap_comp F).
+  intros X Y f. apply H.
+  transitivity (comp (fmap F f) (fmap F (id X))).
+  apply (fmap_comp F).
+  transitivity (comp (fmap F f) (id _)).
+  f_equiv.
+  apply (fmap_id F).
+  apply (ident_r B).
+  intros X Y f. apply H.
+  transitivity (comp (fmap F (id Y)) (fmap F f)).
+  apply (fmap_comp F).
+  transitivity (comp (id _) (fmap F f)).
+  f_equiv.
+  apply (fmap_id F).
+  apply (ident_l B).
+  intros. apply H.
+  transitivity (comp (fmap F h) (comp (fmap F g) (fmap F f))).
+  transitivity (comp (fmap F h) (fmap F (comp g f))).
+  apply (fmap_comp F).
+  f_equiv.
+  apply (fmap_comp F).
+  transitivity (comp (comp (fmap F h) (fmap F g)) (fmap F f)).
+  apply (assoc B).
+  transitivity (comp (fmap F (comp h g)) (fmap F f)).
+  f_equiv.
+  symmetry. apply (fmap_comp F).
+  symmetry. apply (fmap_comp F).
+Qed.

@@ -33,7 +33,7 @@ Polymorphic Instance fmap_eq_Proper{A B}{F: Fun A B}{X Y}: Proper (eq_h ==> eq_h
 
 
 Polymorphic Definition faithful{A B}(F: FunSig A B): Prop :=
-  forall X Y (f f': Hom X Y), fmap F f = fmap F f' -> f = f'.
+  forall X Y (f f': Hom X Y), eq_h (fmap F f) (fmap F f') -> eq_h f f'.
 
 Polymorphic Definition full{A B}(F: FunSig A B): Prop :=
   forall X Y (f: Hom (F X) (F Y)), exists f', f = fmap F f'.

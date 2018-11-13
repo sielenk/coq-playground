@@ -234,3 +234,65 @@ Polymorphic Definition id_iso{A: Cat}(X: A): Iso X X.
   |}.
   split; apply (ident_r A).
 Defined.
+
+
+Polymorphic Definition comp_iso{A: Cat}{X Y Z: A}(g: Iso Y Z)(f: Iso X Y): Iso X Z.
+  refine {|
+    iso_hom := comp g f;
+    iso_inv := comp (iso_inv f) (iso_inv g)
+  |}.
+  split.
+  transitivity (comp g (comp (comp f (iso_inv f)) (iso_inv g))).
+  transitivity (comp g (comp f (comp (iso_inv f) (iso_inv g)))).
+  symmetry. apply (assoc A).
+  f_equiv.
+  apply (assoc A).
+  transitivity (comp g (comp (id _) (iso_inv g))).
+  f_equiv.
+  f_equiv.
+  apply (iso_prop f).
+  transitivity (comp g (iso_inv g)).
+  f_equiv.
+  apply (ident_l A).
+  apply (iso_prop g).
+  transitivity (comp (iso_inv f) (comp (iso_inv g) (comp g f))).
+  symmetry. apply (assoc A).
+  transitivity (comp (iso_inv f) (comp (comp (iso_inv g) g) f)).
+  f_equiv.
+  apply (assoc A).
+  transitivity (comp (iso_inv f) (comp (id _) f)).
+  f_equiv.
+  f_equiv.
+  apply (iso_prop g).
+  transitivity (comp (iso_inv f) f).
+  f_equiv.
+  apply (ident_l A).
+  apply (iso_prop f).
+Defined.
+
+Polymorphic Definition isoCatSig(A: Cat): CatSig := {|
+  Ob         := A;
+  Hom        := Iso;
+  id         := id_iso;
+  comp X Y Z := comp_iso;
+  eq_h X Y   := eq_h;
+|}.
+
+Polymorphic Lemma isoCatAx(A: Cat): CatAx (isoCatSig A).
+Proof.
+  split.
+  intros X Y.
+  split.
+  intros f. simpl. reflexivity.
+  intros f g H. simpl. symmetry. assumption.
+  intros f g h H1 H2. simpl. transitivity (g: @Hom A _ _); assumption.
+  intros X Y Z f1 f2 Hf g1 g2 Hg.
+  simpl. f_equiv; assumption.
+  intros X Y f. apply (ident_r A).
+  intros X Y f. apply (ident_l A).
+  intros W X Y Z h g f. apply (assoc A).
+Qed.
+
+Polymorphic Definition isoCat(A: Cat): Cat := {|
+  catAx := isoCatAx A
+|}.

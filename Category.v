@@ -210,7 +210,8 @@ Polymorphic Definition opSig(A: CatSig): CatSig := {|
   eq_h X Y f g   := eq_h g f;
 |}.
 
-Polymorphic Definition opAx(A: Cat): CatAx (opSig A).
+Polymorphic Lemma opAx(A: Cat): CatAx (opSig A).
+Proof.
   split; intros.
   split. intro f. simpl. reflexivity.
   intros f g H. simpl. symmetry. apply H.
@@ -219,7 +220,7 @@ Polymorphic Definition opAx(A: Cat): CatAx (opSig A).
   simpl. symmetry. apply (ident_l A).
   simpl. symmetry. apply (ident_r A).
   simpl. apply (assoc A).
-Defined.
+Qed.
 
 Polymorphic Definition op(A: Cat): Cat := {|
   catAx := opAx A

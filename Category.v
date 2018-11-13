@@ -36,10 +36,10 @@ Polymorphic Record Cat: Type := {
   catAx  :> CatAx catSig
 }.
 
-Instance eq_h_Equivalence{A: Cat}{X Y}: Equivalence (@eq_h A X Y) :=
+Polymorphic Instance eq_h_Equivalence{A: Cat}{X Y}: Equivalence (@eq_h A X Y) :=
   eq_h_equiv A X Y.
 
-Instance comp_eq_Proper{A: Cat}{X Y Z}: Proper (eq_h ==> eq_h ==> eq_h) (@comp A X Y Z) :=
+Polymorphic Instance comp_eq_Proper{A: Cat}{X Y Z}: Proper (eq_h ==> eq_h ==> eq_h) (@comp A X Y Z) :=
   comp_eq A X Y Z.
 
 

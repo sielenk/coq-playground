@@ -43,6 +43,10 @@ Polymorphic Instance comp_eq_Proper{A: Cat}{X Y Z}: Proper (eq_h ==> eq_h ==> eq
   comp_eq A X Y Z.
 
 
+Polymorphic Definition thin(A: CatSig) :=
+  forall (X Y: A)(f1 f2: Hom X Y), f1 = f2.
+
+
 Polymorphic Record Ret{A: CatSig}{X Y: Ob A} := {
   ret_hom :> Hom X Y;
   ret_sec :  Hom Y X;

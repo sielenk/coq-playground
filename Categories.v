@@ -2,6 +2,8 @@ Require Import Relations.
 Require Import RelationClasses.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
+Require Import Coq.Logic.Decidable.
+Require Import Fin.
 
 
 Definition eqF{X Y}(H: X = Y): X -> Y :=
@@ -369,7 +371,7 @@ Polymorphic Cumulative Record Nat{A B}(F G: Fun A B) := {
 
 Arguments eta {A B F G}.
 
-Polymorphic Lemma natEq@{i j k l}{A B}{F G: Fun@{i j k l} A B}(M N: Nat F G): (forall X, eta N X = eta M X) -> M = N.
+Polymorphic Lemma natEq@{i j k l}{A B}{F G: Fun@{i j k l} A B}(M N: Nat F G): (forall X, N X = M X) -> M = N.
 Proof.
   destruct M, N. simpl.
   intro H.
@@ -507,6 +509,12 @@ Polymorphic Definition CommaB{A B C} S T: Fun (@Comma A B C S T) B.
   refine {| funSig := CommaBSig S T |}.
   split; reflexivity.
 Defined.
+
+
+
+
+
+
 
 
 
@@ -818,78 +826,79 @@ End yoneda_embedding.
 
 
 
-
-
-
-Definition oneOb := unit.
-
-Inductive oneHom: oneOb -> oneOb -> Set :=
-  UnitHom: oneHom tt tt.
-
-Definition oneId(X: oneOb): oneHom X X :=
-  match X as X' return oneHom X' X' with tt => UnitHom end.
-
-Definition oneComp X Y Z (f: oneHom Y Z)(g: oneHom X Y): oneHom X Z :=
-  match X as X', Z as Z' return oneHom X' Z' with tt, tt => UnitHom end.
-
-Definition CatOneSig@{i j}: CatSig@{i j} := {|
-  Ob   := oneOb: Type@{i};
-  Hom  := oneHom: oneOb -> oneOb -> Type@{j};
-  id   := oneId;
-  comp := oneComp
+Definition nullSig: CatSig := {|
+  Ob             := Empty_set;
+  Hom _ _        := Empty_set;
+  id X           := X;
+  comp _ Y _ _ _ := Y
 |}.
 
-Definition CatOne@{i j}: Cat@{i j}.
-  refine {| catSig := CatOneSig |}.
-  constructor.
-  intros X Y []. reflexivity.
-  intros X Y []. reflexivity.
-  intros [] X Y [] f g h. reflexivity.
+Definition null: Cat.
+  refine {| catSig := nullSig |}.
+  constructor; simpl.
+  intros X Y [].
+  intros X Y [].
+  intros [].
 Defined.
 
 
+Definition oneSig: CatSig := {|
+  Ob             := unit;
+  Hom _ _        := unit;
+  id _           := tt;
+  comp _ _ _ _ _ := tt
+|}.
 
-Inductive twoOb: Set := Zero | One.
+Definition one: Cat.
+  refine {| catSig := oneSig |}.
+  constructor; simpl.
+  intros X Y []. reflexivity.
+  intros X Y []. reflexivity.
+  intros. reflexivity.
+Defined.
+
+
+Inductive twoOb: Set := Zero2 | One2.
 
 Inductive twoHom: twoOb -> twoOb -> Set :=
-| IdZero:  twoHom Zero Zero
-| IdOne:   twoHom One One
-| ZeroOne: twoHom Zero One
+| IdZero2:  twoHom Zero2 Zero2
+| IdOne2:   twoHom One2 One2
+| ZeroOne2: twoHom Zero2 One2
 .
 
 Definition twoId(X: twoOb): twoHom X X :=
   match X as X' return (twoHom X' X') with
-  | Zero => IdZero
-  | One  => IdOne
+  | Zero2 => IdZero2
+  | One2  => IdOne2
   end.
 
 Definition twoComp X Y Z (f: twoHom Y Z)(g: twoHom X Y): twoHom X Z.
-  assert (H1: Zero <> One).
+  assert (H1: Zero2 <> One2).
   intro H. inversion H.
-  assert (H2: One <> Zero).
+  assert (H2: One2 <> Zero2).
   intro H. apply H1. symmetry. assumption.
   exact (
     sumor_rec (fun _ => twoHom X Z) (fun gf => gf) (fun H => False_rec _ (H (eq_refl _)))
       match f in twoHom Yf Z', g in twoHom X' Yg return twoHom X' Z' + {Yf <> Yg} with
-      | IdZero,  IdZero  => inleft IdZero
-      | IdOne,   IdOne   => inleft IdOne
-      | ZeroOne, IdZero  => inleft ZeroOne
-      | IdOne,   ZeroOne => inleft ZeroOne
-      | IdOne,   IdZero  => inright H2
-      | _,       _       => inright H1
+      | IdZero2,  IdZero2  => inleft IdZero2
+      | IdOne2,   IdOne2   => inleft IdOne2
+      | ZeroOne2, IdZero2  => inleft ZeroOne2
+      | IdOne2,   ZeroOne2 => inleft ZeroOne2
+      | IdOne2,   IdZero2  => inright H2
+      | _,        _        => inright H1
       end
   ).
 Defined.
 
-Definition CatTwoSig@{i j}: CatSig@{i j} := {|
-  Ob   := twoOb: Type@{i};
-  Hom  := twoHom: twoOb -> twoOb -> Type@{j};
+Definition twoSig: CatSig := {|
+  Ob   := twoOb;
+  Hom  := twoHom;
   id   := twoId;
   comp := twoComp
 |}.
 
-Definition CatTwo@{i j}: Cat@{i j}.
-  refine {| catSig := CatTwoSig |}.
+Definition two: Cat.
+  refine {| catSig := twoSig |}.
 
   assert (H1: forall (X Y : twoOb) (f : twoHom X Y),
     twoComp X X Y f (twoId X) = f).
@@ -907,94 +916,173 @@ Definition CatTwo@{i j}: Cat@{i j}.
 Defined.
 
 
-Lemma one_thin: thin CatOne.
-Proof.
-  intros X Y f f'.
-  apply eqHom_trans'.
-  intros X' Y' ff H1 H2 H3.
-  destruct ff, f'; try reflexivity;
-  inversion H1;
-  inversion H2.
-Qed.
+Inductive threeOb: Set := Zero3 | One3 | Two3.
 
-Lemma two_thin: thin CatTwo.
-Proof.
-  intros X Y f f'.
-  apply eqHom_trans'.
-  intros X' Y' ff H1 H2 H3.
-  destruct ff, f'; try reflexivity;
-  inversion H1;
-  inversion H2.
-Qed.
+Inductive threeHom: threeOb -> threeOb -> Set :=
+| IdZero3:  threeHom Zero3 Zero3
+| IdOne3:   threeHom One3 One3
+| IdTwo3:   threeHom Two3 Two3
+| ZeroOne3: threeHom Zero3 One3
+| ZeroTwo3: threeHom Zero3 Two3
+| OneTwo3:  threeHom One3 Two3
+.
 
-Lemma zero_initial: @initial CatTwo Zero.
-Proof.
-  intros [ | ]; [exists IdZero | exists ZeroOne];
-  apply two_thin.
-Qed.
-
-
-Definition FunASig: FunSig CatOne CatTwo := {|
-  fmap1 _     := Zero: Ob CatTwo;
-  fmap2 _ _ _ := IdZero
-|}.
-
-Definition FunA: Fun CatOne CatTwo.
-  refine {| funSig := FunASig |}.
-  constructor; simpl; intros; reflexivity.
-Defined.
-
-Definition FunBSig: FunSig CatOne CatTwo := {|
-  fmap1 _     := One: Ob CatTwo;
-  fmap2 _ _ _ := IdOne
-|}.
-
-Definition FunB: Fun CatOne CatTwo.
-  refine {| funSig := FunBSig |}.
-  constructor; simpl; intros; reflexivity.
-Defined.
-
-Definition NatAB: Nat FunA FunB.
-  apply (Build_Nat CatOne CatTwo FunA FunB (fun _ => ZeroOne)).
-  reflexivity.
-Defined.
-
-
-
-Definition xxFmap1(X: Ob CatTwo): Ob (FUN CatOne CatTwo) :=
-  match X with Zero => FunA | One => FunB end.
-
-Definition xxFmap2(X Y: Ob CatTwo)(f: Hom X Y): Hom (xxFmap1 X) (xxFmap1 Y) :=
-  match f in (twoHom X' Y') return (Hom (xxFmap1 X') (xxFmap1 Y')) with
-  | IdZero  => natId CatOne CatTwo FunA
-  | IdOne   => natId CatOne CatTwo FunB
-  | ZeroOne => NatAB
+Definition threeId(X: threeOb): threeHom X X :=
+  match X as X' return threeHom X' X' with
+  | Zero3 => IdZero3
+  | One3  => IdOne3
+  | Two3  => IdTwo3
   end.
 
-Definition xxx: Fun CatTwo (FUN CatOne CatTwo).
-  refine {| funSig := {| fmap1 := xxFmap1; fmap2 := xxFmap2 |}|}.
-  constructor.
+Definition threeComp X Y Z (f: threeHom Y Z)(g: threeHom X Y): threeHom X Z.
+  refine (
+    sumor_rec (fun _ => threeHom X Z) (fun gf => gf) (fun H => False_rec _ (H (eq_refl _)))
+      match f in threeHom Yf Z', g in threeHom X' Yg return threeHom X' Z' + {Yf <> Yg} with
+      | IdZero3,  IdZero3  => inleft IdZero3
+
+      | IdOne3,   IdOne3   => inleft IdOne3
+      | IdOne3,   ZeroOne3 => inleft ZeroOne3
+
+      | IdTwo3,   IdTwo3   => inleft IdTwo3
+      | IdTwo3,   OneTwo3  => inleft OneTwo3
+      | IdTwo3,   ZeroTwo3 => inleft ZeroTwo3
+
+      | OneTwo3,  ZeroOne3 => inleft ZeroTwo3
+
+      | ZeroOne3, IdZero3  => inleft ZeroOne3
+      | ZeroTwo3, IdZero3  => inleft ZeroTwo3
+
+      | OneTwo3,  IdOne3   => inleft OneTwo3
+
+      | _,        _        => inright (fun H => _)
+      end
+  ); inversion H.
+Defined.
+
+Definition threeSig: CatSig := {|
+  Ob   := threeOb;
+  Hom  := threeHom: threeOb -> threeOb -> Set;
+  id   := threeId;
+  comp := threeComp
+|}.
+
+Definition three: Cat.
+  refine {| catSig := threeSig |}.
+
+  assert (H1: forall (X Y: threeOb) (f: threeHom X Y),
+    threeComp X X Y f (threeId X) = f).
+  intros X Y []; reflexivity.
+
+  assert (H2: forall (X Y : threeOb) (f : threeHom X Y),
+    threeComp X Y Y (threeId Y) f = f).
+  intros X Y []; reflexivity.
+
+  constructor; try assumption.
+  intros W X Y Z f g h.
+  destruct f; try (repeat rewrite H2; reflexivity);
+  destruct h; try (repeat rewrite H1; reflexivity);
+  inversion g.
+
+Defined.
+
+
+Lemma star_thin: thin star.
+Proof.
+  intros X Y [] [].
+  reflexivity.
+Qed.
+
+Lemma arrow_thin: thin arrow.
+Proof.
+  intros X Y f f'.
+  apply eqHom_trans'.
+  intros X' Y' ff H1 H2 H3.
+  destruct ff, f'; try reflexivity;
+  inversion H1;
+  inversion H2.
+Qed.
+
+Lemma zero_initial: @initial arrow Zero.
+Proof.
+  intros [ | ]; [exists IdZero | exists ZeroOne];
+  apply arrow_thin.
+Qed.
+
+
+
+Definition fooSig(A: Cat): FunSig A (FUN star A).
+  set (sig X := {| fmap1 _ := X; fmap2 _ _ _ := id X |}: FunSig star A).
+  assert (ax: forall X, FunAx (sig X)).
+  intro X. split; repeat intros []; simpl.
+  reflexivity.
+  symmetry. apply (ident_r A).
+  set (ff X := {| funSig := sig X; funAx := ax X |}: Ob (FUN star A)).
+
+  refine {| fmap1 := ff; fmap2 X Y f := Build_Nat star A (ff X) (ff Y) (fun Z => f) _ |}.
+
   simpl.
-  intros []; reflexivity.
+  intros [] [] [].
+  rewrite (ident_r A).
+  apply (ident_l A).
+Defined.
 
+Definition foo(A: Cat): Fun A (FUN star A).
+  refine {| funSig := fooSig A |}.
+  split; intros; apply natEq; reflexivity.
+Defined.
+
+Definition bar(A: Cat): Fun (FUN star A) A.
+  refine {| funSig := {| fmap1 (X: Ob (FUN star A)) := fmap1 X tt; fmap2 X Y f := f tt |} |}.
+  split; reflexivity.
+Defined.
+
+Definition xxx{A: CatSig}(X Y X' Y': Ob A)(Hx: X = X')(Hy: Y = Y'): Hom X Y -> Hom X' Y' :=
+  match Hx in (_ = X''), Hy in (_ = Y'') return Hom X Y -> Hom X'' Y'' with
+  | eq_refl, eq_refl => fun f => f
+  end.
+
+Lemma baz(A: Cat): isomorphic (A := CAT) A (FUN star A).
+Proof.
+  exists (foo A).
+  exists (bar A).
+  split; simpl.
+  apply (funEq (funComp (foo A) (bar A)) (funId (FUNSig starSig A))).
+  set (B := FUN star A).
   intros.
-  repeat rewrite eq_comp_comp'.
+  set (F := @funComp B A B (foo A) (bar A)).
+  set (F1 := fmap1 F).
+  set (F2 := fmap2 F: Hom X Y -> Hom (F1 X) (F1 Y)).
+  change (eqHom (F2 f) f).
 
-  set (H1 := eq_refl Y).
-  set (H2 := eq_refl _).
-  set (Y' := Y).
-  change (Hom X Y') in g.
-  change (Y = Y') in H1.
+  assert (forall Z, Z = F1 Z).
+  intro Z.
+  apply funEq.
+  intros [] [] []. simpl.
+  rewrite (fmap_id Z).
+  reflexivity.
 
-  destruct g; simpl.
-  intros.
-  apply eqHom_trans.
-  intros.
-  simpl in * |- *.
-  destruct (xxFmap2 X Z (twoComp X Y Z f g)).
-  simpl in * |- *.
+  apply (eqHom_trans _ match H X in (_ = X'), H Y in (_ = Y') return Hom X' Y' with eq_refl, eq_refl => f end).
+  destruct (H X), (H Y). reflexivity.
+  apply eq_eqHom.
+  apply natEq.
+  intros []. simpl.
+  clear F2.
+  set (u := @eta starSig (catSig A) X Y f tt).
+  set (v := @eta starSig (catSig A) (F1 X) (F1 Y) match H X in (_ = X'), H Y in (_ = Y') return Hom X' Y' with eq_refl, eq_refl => f end).
+  change (v = u).
+ simpl in u.
+  generalize dependent Y'.
+  intros [].
+  rewrite (H X) in X'.
+  intros H1 H2. symmetry in H1.
+  generalize dependent Y'.
 
-  set (fg := comp f g). simpl.
-  assert (fg = comp f g) by reflexivity.
-  destruct fg, Y; simpl.
-  
+
+  set (HX := H X).
+  set (HY := H Y).
+  subst.
+  destruct (H Y). reflexivity.
+  extensionality x.
+
+
+  unfold F2, F. simpl.

@@ -824,6 +824,42 @@ Proof.
 Qed.
 
 
+Definition injective {A B}(f: A -> B) := forall a1 a2, f a1 = f a2 -> a1 = a2.
+Definition surjective{A B}(f: A -> B) := forall a, exists x, f x = a.
+Definition bijective {A B}(f: A -> B) := injective f /\ surjective f.
+
+Inductive bij(A B: Type) := makeBij (u: A -> B)(v: B -> A): injective u -> (forall a, u (v a) = a) -> bij A B.
+
+Definition bij2Fun{A B}(f: bij A B): A -> B := let (f', _, _, _) := f in f'.
+Coercion   bij2Fun: bij >-> Funclass.
+
+Definition bijComp{A B C}(g: bij B C)(f: bij A B): bij A C.
+  refine (match g, f with
+          | makeBij _ _ g g' H1 H2, makeBij _ _ f f' H3 H4 =>
+              makeBij _ _ (fun a => g (f a)) (fun b => f' (g' b)) _ _
+          end).
+  intros a1 a2 H5.
+  apply H3.
+  apply H1.
+  apply H5.
+  intro c.
+  rewrite H4.
+  apply H2.
+Defined.
+
+Definition bijInvert{A B}(f: bij A B): bij B A.
+  refine (match f with makeBij _ _ u v H1 H2 => makeBij _ _ v u _ _ end).
+  intros b1 b2 H3.
+  rewrite <- (H2 b1).
+  rewrite <- (H2 b2).
+  rewrite H3.
+  reflexivity.
+  intros a.
+  apply H1.
+  apply H2.
+Defined.
+
+
 Inductive aut(g: Group) := makeAut (u: GroupHom g g)(v: GroupHom g g): injective u -> (forall a, u (v a) = a) -> aut g.
 
 Definition aut2hom{g}(f: aut g): GroupHom g g := let (f', _, _, _) := f in f'.

@@ -940,6 +940,26 @@ Definition Aut(g: Group): Group.
 Defined.
 
 
+Definition foo(g: Group): GroupHom g (Aut g).
+  refine (makeGroupHom2 g (Aut g)
+    (fun a => makeAut g (innerAutomorphism a)
+                        (innerAutomorphism (invert a))
+                        (fun b1 b2 => _)
+                        (fun b => _))
+    (fun a1 a2 => _)).
+  apply autEq.
+  simpl.
+  intro a3. symmetry. apply konjugateOp1.
+  Unshelve.
+  simpl.
+  apply konjugateInjective.
+  simpl.
+  rewrite konjugateOp1.
+  rewrite (rightInverse g).
+  apply konjugateUnit1.
+Defined.
+
+
 Definition natMonoid: Monoid.
   exists (Build_MonoidSig (makeSemiGroupSig plus) 0).
   repeat split; simpl.

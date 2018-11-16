@@ -6,6 +6,7 @@
 
 Require Import ProofIrrelevance.
 Require Import EqdepFacts.
+Require Import PeanoNat.
 Require Import RelationClasses.
 Require Import Morphisms.
 Require Import FunctionalExtensionality.
@@ -936,4 +937,12 @@ Definition Aut(g: Group): Group.
   apply i.
   rewrite e.
   reflexivity.
+Defined.
+
+
+Definition natMonoid: Monoid.
+  exists (Build_MonoidSig (makeSemiGroupSig plus) 0).
+  repeat split; simpl.
+  symmetry. apply Nat.add_assoc.
+  apply Nat.add_0_r.
 Defined.

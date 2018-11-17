@@ -296,3 +296,55 @@ Qed.
 Polymorphic Definition isoCat(A: Cat): Cat := {|
   catAx := isoCatAx A
 |}.
+
+
+
+Polymorphic Definition id_epi{A: Cat}(X: A): Epi X X.
+  exists (id _).
+  intros.
+  transitivity (comp g1 (id X)).
+  symmetry. apply (ident_r A).
+  transitivity (comp g2 (id X)).
+  assumption.
+  apply (ident_r A).
+Defined.
+
+
+Polymorphic Definition comp_epi{A: Cat}{X Y Z: A}(g: Epi Y Z)(f: Epi X Y): Epi X Z.
+  exists (comp g f).
+  intros W h1 h2 H.
+  apply (epi_prop g).
+  apply (epi_prop f).
+  transitivity (comp h1 (comp g f)).
+  symmetry. apply (assoc A).
+  transitivity (comp h2 (comp g f)).
+  assumption.
+  apply (assoc A).
+Defined.
+
+Polymorphic Definition epiCatSig(A: Cat): CatSig := {|
+  Ob         := A;
+  Hom        := Epi;
+  id         := id_epi;
+  comp X Y Z := comp_epi;
+  eq_h X Y   := eq_h;
+|}.
+
+Polymorphic Lemma epiCatAx(A: Cat): CatAx (epiCatSig A).
+Proof.
+  split.
+  intros X Y.
+  split.
+  intros f. simpl. reflexivity.
+  intros f g H. simpl. symmetry. assumption.
+  intros f g h H1 H2. simpl. transitivity (g: @Hom A _ _); assumption.
+  intros X Y Z f1 f2 Hf g1 g2 Hg.
+  simpl. f_equiv; assumption.
+  intros X Y f. apply (ident_r A).
+  intros X Y f. apply (ident_l A).
+  intros W X Y Z h g f. apply (assoc A).
+Qed.
+
+Polymorphic Definition epiCat(A: Cat): Cat := {|
+  catAx := epiCatAx A
+|}.

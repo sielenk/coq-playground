@@ -196,6 +196,12 @@ Section comma_category.
 End comma_category.
 
 Arguments CommaCat{_ _ _}.
+Arguments CommaOb{_ _ _}.
+Arguments commaOb_X{_ _ _ _ _}.
+Arguments commaOb_Y{_ _ _ _ _}.
+Arguments commaOb_f{_ _ _ _ _}.
+Arguments commaHom_fst{_ _ _ _ _ _ _}.
+Arguments commaHom_snd{_ _ _ _ _ _ _}.
 Arguments CommaCodFun{_ _ _}.
 Arguments CommaDomFun{_ _ _}.
 Arguments CommaHomFun{_ _ _}.

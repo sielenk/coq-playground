@@ -38,6 +38,26 @@ Proof.
   apply (ident_r A).
 Qed.
 
+Polymorphic Definition coneHom{D A: Cat}{F: Fun D A}
+    (X Y: Cone F)
+    (f: Hom (cone_Ob X) (cone_Ob Y)):
+    (forall d: D, eq_h (cone_Hom X d) (comp (cone_Hom Y d) f)) ->
+    Hom X Y.
+  intro H.
+  refine {|
+    commaHom_fst := f;
+    commaHom_snd := oneHom;
+  |}.
+  intro d.
+  symmetry.
+  transitivity (commaOb_f X d).
+  destruct oneHom.
+  apply (ident_l (FUN D A)).
+  apply (H d).
+Defined.
+
+
+
 Polymorphic Record Lim{D A: Cat}(F: Fun D A) := {
   limit_cone   :> Cone F;
   limit_initial:  initial limit_cone

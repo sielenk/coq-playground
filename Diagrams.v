@@ -337,7 +337,9 @@ Polymorphic Definition oneFun(A: Cat): Fun A (FUN one A) := {|
 |}.
 
 Definition oneOb: one := oneOb_.
-Definition oneHom: @Hom one oneOb oneOb := eq_refl.
+Definition oneHom{X Y: one}: Hom X Y.
+  destruct X, Y. reflexivity.
+Defined.
 
 Definition oneOb_isomorphic(X Y: one): Iso X Y.
   destruct X, Y.

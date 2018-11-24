@@ -57,7 +57,7 @@ Section isomorphic_A1_A.
     intros [] [] [].
     simpl.
     transitivity (id (F oneOb)).
-    transitivity (@fmap one A F _ _ oneHom).
+    transitivity (@fmap one A F oneOb oneOb oneHom).
     apply (ident_r A).
     unfold A1 in F. simpl in F.
     apply (fmap_id (F: Fun _ _)).

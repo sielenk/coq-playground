@@ -1,6 +1,7 @@
 Require Import Coq.Relations.Relation_Definitions.
 Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Classes.Morphisms.
+Require Import Coq.Logic.Eqdep.
 
 Require Import Category.
 Require Import Functor.
@@ -335,6 +336,12 @@ Qed.
 Polymorphic Definition oneFun(A: Cat): Fun A (FUN one A) := {|
   funAx := oneFunAx A
 |}.
+
+Lemma one_thin: thin one.
+Proof.
+  intros X Y.
+  apply UIP.
+Qed.
 
 Definition oneOb: one := oneOb_.
 Definition oneHom{X Y: one}: Hom X Y.

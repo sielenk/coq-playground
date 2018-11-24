@@ -6,10 +6,10 @@ Require Import Diagrams.
 Require Import MetaCategory.
 
 
-Definition Cone{D A: Cat}(F: Fun D A): CAT :=
+Polymorphic Definition Cone{D A: Cat}(F: Fun D A): CAT :=
   CommaCat (delta D A) (oneFun (FUN D A) F).
 
-Definition cone{D A: Cat}{F: Fun D A}(N: A)(psi: forall X, Hom N (F X)):
+Polymorphic Definition cone{D A: Cat}{F: Fun D A}(N: A)(psi: forall X, Hom N (F X)):
     (forall{X Y: D}(f: Hom X Y), eq_h (comp (fmap F f) (psi X)) (psi Y)) ->
     Cone F.
 
@@ -23,13 +23,13 @@ Definition cone{D A: Cat}{F: Fun D A}(N: A)(psi: forall X, Hom N (F X)):
   symmetry. apply (ident_r A).
 Defined.
 
-Definition cone_Ob{D A: Cat}{F: Fun D A}: Fun (Cone F) A :=
+Polymorphic Definition cone_Ob{D A: Cat}{F: Fun D A}: Fun (Cone F) A :=
   CommaDomFun _ _.
 
-Definition cone_Hom{D A: Cat}{F: Fun D A}(L: Cone F)(X: D): Hom (cone_Ob L) (F X) :=
+Polymorphic Definition cone_Hom{D A: Cat}{F: Fun D A}(L: Cone F)(X: D): Hom (cone_Ob L) (F X) :=
   fmap (CommaHomFun _ _ L) twoF X.
 
-Lemma cone_prop{D A: Cat}{F: Fun D A}(L: Cone F):
+Polymorphic Lemma cone_prop{D A: Cat}{F: Fun D A}(L: Cone F):
     forall{X Y: D}(f: Hom X Y),  eq_h (comp (fmap F f) (cone_Hom L X)) (cone_Hom L Y).
 Proof.
   intros X Y f.
@@ -38,7 +38,7 @@ Proof.
   apply (ident_r A).
 Qed.
 
-Record lim{D A: Cat}(F: Fun D A) := {
+Polymorphic Record Lim{D A: Cat}(F: Fun D A) := {
   limit_cone   :> Cone F;
   limit_initial:  initial limit_cone
 }.

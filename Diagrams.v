@@ -10,25 +10,25 @@ Require Import FunctorCategory.
 Require Import NaturalTransformation.
 
 
-Inductive twoOb : Type := twoX | twoY.
+Inductive twoOb : Type := twoX_ | twoY_.
 Inductive twoHom: twoOb -> twoOb -> Type :=
-  | twoIdX: twoHom twoX twoX
-  | twoIdY: twoHom twoY twoY
-  | twoF  : twoHom twoX twoY
+  | twoIdX_: twoHom twoX_ twoX_
+  | twoIdY_: twoHom twoY_ twoY_
+  | twoF_  : twoHom twoX_ twoY_
   .
 
-Definition no_twoYX(f: twoHom twoY twoX): False :=
+Definition no_twoYX(f: twoHom twoY_ twoX_): False :=
   match f in twoHom X' Y'
-  return match X', Y' with twoY, twoX => False | _, _ => True end
-  with twoIdX => I | twoIdY => I | twoF => I end.
+  return match X', Y' with twoY_, twoX_ => False | _, _ => True end
+  with twoIdX_ => I | twoIdY_ => I | twoF_ => I end.
 
 Lemma two_thin{X Y}(f1 f2: twoHom X Y): f1 = f2.
 Proof.
   set (H X' Y' := match X', Y' return twoHom X' Y' -> twoHom X' Y' with
-     | twoX, twoX => fun _ => twoIdX
-     | twoX, twoY => fun _ => twoF
-     | twoY, twoY => fun _ => twoIdY
-     | twoY, twoX => fun f => match no_twoYX f with end
+     | twoX_, twoX_ => fun _ => twoIdX_
+     | twoX_, twoY_ => fun _ => twoF_
+     | twoY_, twoY_ => fun _ => twoIdY_
+     | twoY_, twoX_ => fun f => match no_twoYX f with end
      end).
   transitivity (H _ _ f1).
   destruct f1; reflexivity.
@@ -39,16 +39,16 @@ Definition twoSig: CatSig := {|
   Ob             := twoOb;
   Hom            := twoHom;
   id X           := match X with
-                    | twoX => twoIdX
-                    | twoY => twoIdY
+                    | twoX_ => twoIdX_
+                    | twoY_ => twoIdY_
                     end;
   comp X Y Z g   := match g in twoHom Y' Z' return twoHom X Y' -> twoHom X Z' with
-                    | twoIdX => fun f => f
-                    | twoIdY => fun f => f
-                    | twoF   => match X with
-                                | twoX => fun f => twoF
-                                | twoY => fun f => match no_twoYX f with end
-                                end
+                    | twoIdX_ => fun f => f
+                    | twoIdY_ => fun f => f
+                    | twoF_   => match X with
+                                 | twoX_ => fun f => twoF_
+                                 | twoY_ => fun f => match no_twoYX f with end
+                                 end
                     end;
   eq_h _ _       := eq
 |}.
@@ -71,14 +71,14 @@ Definition two: Cat := {|
 
 Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A := {|
   fmap_o(X': two) := match X' with
-                     | twoX => X
-                     | twoY => Y
+                     | twoX_ => X
+                     | twoY_ => Y
                      end;
   fmap X' Y'      := match X', Y' with
-                     | twoX, twoX => fun _ => id X
-                     | twoX, twoY => fun _ => f
-                     | twoY, twoY => fun _ => id Y
-                     | twoY, twoX => fun f => match no_twoYX f with end
+                     | twoX_, twoX_ => fun _ => id X
+                     | twoX_, twoY_ => fun _ => f
+                     | twoY_, twoY_ => fun _ => id Y
+                     | twoY_, twoX_ => fun f => match no_twoYX f with end
                      end
 |}.
 
@@ -100,6 +100,11 @@ Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A := {|
   funAx := twoFunAx f
 |}.
 
+Definition twoX:   two           := twoX_.
+Definition twoY:   two           := twoY_.
+Definition twoIdX: Hom twoX twoX := twoIdX_.
+Definition twoIdY: Hom twoY twoY := twoIdY_.
+Definition twoF:   Hom twoX twoY := twoF_.
 
 
 Definition equalizerSig: CatSig := {|
@@ -150,13 +155,20 @@ Definition equalizer: Cat := {|
   catAx := equalizerAx
 |}.
 
+Definition equalizer_X:   equalizer                   := false.
+Definition equalizer_Y:   equalizer                   := true.
+Definition equalizer_idX: Hom equalizer_X equalizer_X := tt.
+Definition equalizer_idY: Hom equalizer_Y equalizer_Y := tt.
+Definition equalizer_f:   Hom equalizer_X equalizer_Y := false.
+Definition equalizer_g:   Hom equalizer_X equalizer_Y := true.
+
 Polymorphic Definition equalizerFunSig{A: CatSig}{X Y: A}(f g: Hom X Y):
     FunSig equalizerSig A := {|
   fmap_o     := fun(X': equalizer) => if X' then Y else X;
   fmap X' Y' := match X', Y' with
                 | false, false => fun _ => id X
                 | true, true   => fun _ => id Y
-                | false, true  => fun f' => if f' then f else g
+                | false, true  => fun f' => if f' then g else f
                 | true, false  => fun f' => match f' with end
                 end
 |}.
@@ -224,16 +236,25 @@ Definition pullback: Cat := {|
   catAx := pullbackAx
 |}.
 
-Polymorphic Definition pullbackFunSig{A: CatSig}{X1 X2 Y: A}(f: Hom X1 Y)(g: Hom X2 Y):
+Definition pullback_Xf:   pullback                    := Some false.
+Definition pullback_Xg:   pullback                    := Some true.
+Definition pullback_Y:    pullback                    := None.
+Definition pullback_idXf: Hom pullback_Xf pullback_Xf := tt.
+Definition pullback_idXg: Hom pullback_Xg pullback_Xg := tt.
+Definition pullback_idY:  Hom pullback_Y  pullback_Y  := tt.
+Definition pullback_f:    Hom pullback_Xf pullback_Y  := tt.
+Definition pullback_g:    Hom pullback_Xg pullback_Y  := tt.
+
+Polymorphic Definition pullbackFunSig{A: CatSig}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
     FunSig pullbackSig A := {|
   fmap_o     := fun(X': pullback)=> match X' with
-                | Some false => X1
-                | Some true  => X2
+                | Some false => Xf
+                | Some true  => Xg
                 | None       => Y
                 end;
   fmap X' Y' := match X', Y' with
-                | Some false, Some false => fun _ => id X1
-                | Some true, Some true   => fun _ => id X2
+                | Some false, Some false => fun _ => id Xf
+                | Some true, Some true   => fun _ => id Xg
                 | None, None             => fun _ => id Y
                 | Some false, None       => fun _ => f
                 | Some true, None        => fun _ => g
@@ -241,7 +262,7 @@ Polymorphic Definition pullbackFunSig{A: CatSig}{X1 X2 Y: A}(f: Hom X1 Y)(g: Hom
                 end
 |}.
 
-Polymorphic Lemma pullbackFunAx{A: Cat}{X1 X2 Y: A}(f: Hom X1 Y)(g: Hom X2 Y):
+Polymorphic Lemma pullbackFunAx{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
     FunAx (pullbackFunSig f g).
 Proof.
   split.
@@ -251,7 +272,7 @@ Proof.
     try apply (ident_r A); apply (ident_l A).
 Qed.
 
-Polymorphic Definition pullbackFun{A: Cat}{X1 X2 Y: A}(f: Hom X1 Y)(g: Hom X2 Y):
+Polymorphic Definition pullbackFun{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
     Fun pullbackSig A := {|
   funAx := pullbackFunAx f g
 |}.
@@ -310,6 +331,13 @@ Polymorphic Definition zeroFun(A: Cat): Fun zero A :=
 Inductive OneOb: Type := oneOb_.
 Definition one: Cat := product OneOb.
 
+Definition oneX:   one           := oneOb_.
+Definition oneIdX: Hom oneX oneX := eq_refl.
+
+Definition oneHom{X Y: one}: Hom X Y.
+  destruct X, Y. reflexivity.
+Defined.
+
 Polymorphic Definition oneFunSig(A: Cat): FunSig A (FUN one A).
   set (fmap_o X := productFun (fun I: one => X): FUN one A).
   refine {|
@@ -343,11 +371,6 @@ Proof.
   apply UIP.
 Qed.
 
-Definition oneOb: one := oneOb_.
-Definition oneHom{X Y: one}: Hom X Y.
-  destruct X, Y. reflexivity.
-Defined.
-
 Definition oneOb_isomorphic(X Y: one): Iso X Y.
   destruct X, Y.
   refine {|
@@ -378,8 +401,8 @@ Defined.
 
 
 Polymorphic Definition oneTerminalFunSig(A: CatSig): FunSig A one := {|
-  fmap_o(_: A) := oneOb;
-  fmap _ _ _   := oneHom
+  fmap_o(_: A) := oneX;
+  fmap _ _ _   := oneIdX
 |}.
 
 Polymorphic Lemma oneTerminalFunAx(A: CatSig): FunAx (oneTerminalFunSig A).

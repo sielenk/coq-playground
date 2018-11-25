@@ -16,8 +16,8 @@ Polymorphic Definition cone{D A: Cat}{F: Fun D A}(N: A)(psi: forall X, Hom N (F 
   intro H. simpl.
   refine (Build_CommaOb _ _ _
     (delta D A) (oneFun (FUN D A) F)
-    N oneOb
-    (Build_NatTrans _ _ (delta D A N) (oneFun (FUN D A) F oneOb) psi _)).
+    N oneX
+    (Build_NatTrans _ _ (delta D A N) (oneFun (FUN D A) F oneX) psi _)).
   intros X Y f. simpl.
   transitivity (psi Y). apply H.
   symmetry. apply (ident_r A).

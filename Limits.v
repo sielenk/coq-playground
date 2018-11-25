@@ -16,8 +16,8 @@ Polymorphic Definition cone{D A: Cat}{F: Fun D A}(N: A)(psi: forall X, Hom N (F 
   intro H. simpl.
   refine (Build_CommaOb _ _ _
     (delta D A) (oneFun (FUN D A) F)
-    N oneX
-    (Build_NatTrans _ _ (delta D A N) (oneFun (FUN D A) F oneX) psi _)).
+    N one_X
+    (Build_NatTrans _ _ (delta D A N) (oneFun (FUN D A) F one_X) psi _)).
   intros X Y f. simpl.
   transitivity (psi Y). apply H.
   symmetry. apply (ident_r A).
@@ -27,14 +27,14 @@ Polymorphic Definition cone_Ob{D A: Cat}{F: Fun D A}: Fun (Cone F) A :=
   CommaDomFun _ _.
 
 Polymorphic Definition cone_Hom{D A: Cat}{F: Fun D A}(L: Cone F)(X: D): Hom (cone_Ob L) (F X) :=
-  fmap (CommaHomFun _ _ L) twoF X.
+  fmap (CommaHomFun _ _ L) two_f X.
 
 Polymorphic Lemma cone_prop{D A: Cat}{F: Fun D A}(L: Cone F):
     forall{X Y: D}(f: Hom X Y), eq_h (comp (fmap F f) (cone_Hom L X)) (cone_Hom L Y).
 Proof.
   intros X Y f.
   transitivity (comp (cone_Hom L Y) (id _)).
-  apply (natTrans_natural (fmap (CommaHomFun _ _ L) twoF) X Y f).
+  apply (natTrans_natural (fmap (CommaHomFun _ _ L) two_f) X Y f).
   apply (ident_r A).
 Qed.
 
@@ -46,12 +46,12 @@ Polymorphic Definition coneHom{D A: Cat}{F: Fun D A}
   intro H.
   refine {|
     commaHom_fst := f;
-    commaHom_snd := oneHom;
+    commaHom_snd := one_f;
   |}.
   intro d.
   symmetry.
   transitivity (commaOb_f X d).
-  destruct oneHom.
+  destruct one_f.
   apply (ident_l (FUN D A)).
   apply (H d).
 Defined.

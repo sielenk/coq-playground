@@ -69,6 +69,12 @@ Definition two: Cat := {|
   catAx := twoAx
 |}.
 
+Definition two_X:   two             := twoX_.
+Definition two_Y:   two             := twoY_.
+Definition two_idX: Hom two_X two_X := twoIdX_.
+Definition two_idY: Hom two_Y two_Y := twoIdY_.
+Definition two_f:   Hom two_X two_Y := twoF_.
+
 Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A := {|
   fmap_o(X': two) := match X' with
                      | twoX_ => X
@@ -99,12 +105,6 @@ Qed.
 Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A := {|
   funAx := twoFunAx f
 |}.
-
-Definition twoX:   two           := twoX_.
-Definition twoY:   two           := twoY_.
-Definition twoIdX: Hom twoX twoX := twoIdX_.
-Definition twoIdY: Hom twoY twoY := twoIdY_.
-Definition twoF:   Hom twoX twoY := twoF_.
 
 
 Definition equalizerSig: CatSig := {|
@@ -331,10 +331,10 @@ Polymorphic Definition zeroFun(A: Cat): Fun zero A :=
 Inductive OneOb: Type := oneOb_.
 Definition one: Cat := product OneOb.
 
-Definition oneX:   one           := oneOb_.
-Definition oneIdX: Hom oneX oneX := eq_refl.
+Definition one_X:   one             := oneOb_.
+Definition one_idX: Hom one_X one_X := eq_refl.
 
-Definition oneHom{X Y: one}: Hom X Y.
+Definition one_f{X Y: one}: Hom X Y.
   destruct X, Y. reflexivity.
 Defined.
 
@@ -374,8 +374,8 @@ Qed.
 Definition oneOb_isomorphic(X Y: one): Iso X Y.
   destruct X, Y.
   refine {|
-    iso_hom := oneHom;
-    iso_inv := oneHom
+    iso_hom := one_idX;
+    iso_inv := one_idX
   |}.
   split; reflexivity.
 Defined.
@@ -401,8 +401,8 @@ Defined.
 
 
 Polymorphic Definition oneTerminalFunSig(A: CatSig): FunSig A one := {|
-  fmap_o(_: A) := oneX;
-  fmap _ _ _   := oneIdX
+  fmap_o(_: A) := one_X;
+  fmap _ _ _   := one_idX
 |}.
 
 Polymorphic Lemma oneTerminalFunAx(A: CatSig): FunAx (oneTerminalFunSig A).

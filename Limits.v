@@ -30,7 +30,7 @@ Polymorphic Definition cone_Hom{D A: Cat}{F: Fun D A}(L: Cone F)(X: D): Hom (con
   fmap (CommaHomFun _ _ L) twoF X.
 
 Polymorphic Lemma cone_prop{D A: Cat}{F: Fun D A}(L: Cone F):
-    forall{X Y: D}(f: Hom X Y),  eq_h (comp (fmap F f) (cone_Hom L X)) (cone_Hom L Y).
+    forall{X Y: D}(f: Hom X Y), eq_h (comp (fmap F f) (cone_Hom L X)) (cone_Hom L Y).
 Proof.
   intros X Y f.
   transitivity (comp (cone_Hom L Y) (id _)).

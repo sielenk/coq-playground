@@ -59,6 +59,6 @@ Defined.
 
 
 Polymorphic Record Lim{D A: Cat}(F: Fun D A) := {
-  limit_cone   :> Cone F;
-  limit_initial:  initial limit_cone
+  limit_cone    :> Cone F;
+  limit_terminal:  terminal limit_cone
 }.

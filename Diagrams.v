@@ -106,6 +106,21 @@ Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A := {|
   funAx := twoFunAx f
 |}.
 
+Polymorphic Lemma twoFun_X{A: Cat}{X Y: A}(f: Hom X Y): twoFun f two_X = X.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma twoFun_Y{A: Cat}{X Y: A}(f: Hom X Y): twoFun f two_Y = Y.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma twoFun_f{A: Cat}{X Y: A}(f: Hom X Y): fmap (twoFun f) two_f = f.
+Proof.
+  reflexivity.
+Qed.
+
 
 Definition equalizerSig: CatSig := {|
   Ob             := bool: Type;
@@ -195,6 +210,29 @@ Polymorphic Definition equalizerFun{A: Cat}{X Y: A}(f g: Hom X Y):
   funAx := equalizerFunAx f g
 |}.
 
+Polymorphic Lemma equalizerFun_X{A: Cat}{X Y: A}(f g: Hom X Y):
+  equalizerFun f g equalizer_X = X.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma equalizerFun_Y{A: Cat}{X Y: A}(f g: Hom X Y):
+  equalizerFun f g equalizer_Y = Y.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma equalizerFun_f{A: Cat}{X Y: A}(f g: Hom X Y):
+  fmap (equalizerFun f g) equalizer_f = f.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma equalizerFun_g{A: Cat}{X Y: A}(f g: Hom X Y):
+  fmap (equalizerFun f g) equalizer_g = g.
+Proof.
+  reflexivity.
+Qed.
 
 
 Definition pullbackSig: CatSig := {|
@@ -277,6 +315,35 @@ Polymorphic Definition pullbackFun{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y)
   funAx := pullbackFunAx f g
 |}.
 
+Polymorphic Lemma pullbackFun_Xf{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
+  pullbackFun f g pullback_Xf = Xf.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma pullbackFun_Xg{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
+  pullbackFun f g pullback_Xg = Xg.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma pullbackFun_Y{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
+  pullbackFun f g pullback_Y = Y.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma pullbackFun_f{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
+  fmap (pullbackFun f g) pullback_f = f.
+Proof.
+  reflexivity.
+Qed.
+
+Polymorphic Lemma pullbackFun_g{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
+  fmap (pullbackFun f g) pullback_g = g.
+Proof.
+  reflexivity.
+Qed.
 
 
 Polymorphic Definition productSig(I: Type): CatSig := {|
@@ -321,6 +388,12 @@ Polymorphic Definition productFun{I: Type}{A: Cat}(Xi: I -> A):
   funAx := productFunAx Xi
 |}.
 
+Polymorphic Lemma productFun_I{I: Type}{A: Cat}(Xi: I -> A)(i: product I):
+  productFun Xi i = Xi i.
+Proof.
+  reflexivity.
+Qed.
+
 
 Inductive ZeroOb: Type := .
 Definition zero: Cat := product ZeroOb.
@@ -364,6 +437,13 @@ Qed.
 Polymorphic Definition oneFun(A: Cat): Fun A (FUN one A) := {|
   funAx := oneFunAx A
 |}.
+
+Polymorphic Lemma oneFun_X{A: Cat}(X: A):
+  oneFun A X one_X = X.
+Proof.
+  reflexivity.
+Qed.
+
 
 Lemma one_thin: thin one.
 Proof.

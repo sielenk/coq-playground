@@ -62,3 +62,19 @@ Polymorphic Record Lim{D A: Cat}(F: Fun D A) := {
   limit_cone    :> Cone F;
   limit_terminal:  terminal limit_cone
 }.
+
+
+Polymorphic Definition lim{D A: Cat}{F: Fun D A}(Y: Cone F)
+    (f: forall X, Hom X Y):
+    (forall X' f', eq_h (f X') f') ->
+    Lim F.
+
+  intro H.
+  refine {|
+    limit_cone := Y;
+    limit_terminal := {|
+      terminal_hom  := f;
+      terminal_uniq := H
+    |}
+  |}.
+Defined.

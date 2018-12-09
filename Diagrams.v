@@ -10,47 +10,21 @@ Require Import FunctorCategory.
 Require Import NaturalTransformation.
 
 
-Inductive twoOb : Type := twoX_ | twoY_.
-Inductive twoHom: twoOb -> twoOb -> Type :=
-  | twoIdX_: twoHom twoX_ twoX_
-  | twoIdY_: twoHom twoY_ twoY_
-  | twoF_  : twoHom twoX_ twoY_
-  .
-
-Definition no_twoYX(f: twoHom twoY_ twoX_): False :=
-  match f in twoHom X' Y'
-  return match X', Y' with twoY_, twoX_ => False | _, _ => True end
-  with twoIdX_ => I | twoIdY_ => I | twoF_ => I end.
-
-Lemma two_thin{X Y}(f1 f2: twoHom X Y): f1 = f2.
-Proof.
-  set (H X' Y' := match X', Y' return twoHom X' Y' -> twoHom X' Y' with
-     | twoX_, twoX_ => fun _ => twoIdX_
-     | twoX_, twoY_ => fun _ => twoF_
-     | twoY_, twoY_ => fun _ => twoIdY_
-     | twoY_, twoX_ => fun f => match no_twoYX f with end
-     end).
-  transitivity (H _ _ f1).
-  destruct f1; reflexivity.
-  destruct f2; reflexivity.
-Qed.
-
 Definition twoSig: CatSig := {|
-  Ob             := twoOb;
-  Hom            := twoHom;
-  id X           := match X with
-                    | twoX_ => twoIdX_
-                    | twoY_ => twoIdY_
-                    end;
-  comp X Y Z g   := match g in twoHom Y' Z' return twoHom X Y' -> twoHom X Z' with
-                    | twoIdX_ => fun f => f
-                    | twoIdY_ => fun f => f
-                    | twoF_   => match X with
-                                 | twoX_ => fun f => twoF_
-                                 | twoY_ => fun f => match no_twoYX f with end
+  Ob         := bool;
+  Hom X Y    := match X, Y with
+                | true, false => Empty_set
+                | _, _        => unit
+                end;
+  id X       := match X with false => tt | true => tt end;
+  comp X Y Z := match X, Z with
+                | true, false => match Y with
+                                 | false => fun _ f => match f with end
+                                 | true  => fun g _ => match g with end
                                  end
-                    end;
-  eq_h _ _       := eq
+                | _, _        => fun _ _ => tt
+                end;
+  eq_h _ _   := eq
 |}.
 
 Lemma twoAx: CatAx twoSig.
@@ -58,20 +32,19 @@ Proof.
   split; try auto.
   intros X Y. apply eq_equivalence.
   intros X Y Z g1 g2 [] f1 f2 []. reflexivity.
-  intros X Y []; reflexivity.
-  intros X Y []; reflexivity.
-  intros W X Y Z [] g f; try reflexivity.
-  destruct f; try destruct (no_twoYX g).
-  reflexivity.
+  intros [] [] []; reflexivity.
+  intros [] [] []; reflexivity.
+  intros [] [] [] [] [] g f; try reflexivity.
+  destruct f.
 Qed.
 
 Definition two: Cat := {|
   catAx := twoAx
 |}.
 
-Definition two_X: two             := twoX_.
-Definition two_Y: two             := twoY_.
-Definition two_f: Hom two_X two_Y := twoF_.
+Definition two_X: two             := false.
+Definition two_Y: two             := true.
+Definition two_f: Hom two_X two_Y := tt.
 
 Polymorphic Definition two_ob_rect
     (P: two -> Type)
@@ -79,14 +52,14 @@ Polymorphic Definition two_ob_rect
     (Py: P two_Y)
     (X: two):
     P X :=
-  match X return P X with twoX_ => Px | twoY_ => Py end.
+  match X return P X with false => Px | true => Py end.
 
 Polymorphic Definition two_hom_rect
     (P: forall X Y: two, Hom X Y -> Type)
     (Pf: P _ _ two_f)
     (Pid: forall X, P _ _ (id X)):
     forall (X Y: two)(f: Hom X Y), P X Y f.
-  intros _ _ []; try apply Pid.
+  intros [] [] []; try apply Pid.
   apply Pf.
 Defined.
 
@@ -102,10 +75,8 @@ Proof.
   split.
   intros X' Y' g1 g2 []. reflexivity.
   intros []; reflexivity.
-  intros [] Y' Z' [] f'; try (symmetry; apply (ident_l A)).
-  rewrite (two_thin f' (id two_X)).
-  symmetry. apply (ident_r A).
-  destruct (no_twoYX f').
+  intros [] [] [] [] []; symmetry; try apply (ident_l A).
+  apply (ident_r A).
 Qed.
 
 Polymorphic Definition twoFun{A: Cat}{X Y: A}(f: Hom X Y): Fun two A := {|

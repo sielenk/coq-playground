@@ -9,7 +9,9 @@ Require Import MetaCategory.
 Polymorphic Definition Cone{D A: Cat}(F: Fun D A): CAT :=
   CommaCat (delta D A) (oneFun (FUN D A) F).
 
-Polymorphic Definition cone{D A: Cat}{F: Fun D A}(N: A)(psi: forall X, Hom N (F X)):
+Polymorphic Definition cone{D A: Cat}{F: Fun D A}
+    (N: A)
+    (psi: forall X, Hom N (F X)):
     (forall{X Y: D}(f: Hom X Y), eq_h (comp (fmap F f) (psi X)) (psi Y)) ->
     Cone F.
 

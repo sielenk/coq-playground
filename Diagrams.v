@@ -320,7 +320,7 @@ Proof.
 Qed.
 
 Polymorphic Definition pullbackFun{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
-    Fun pullbackSig A := {|
+    Fun pullback A := {|
   funAx := pullbackFunAx f g
 |}.
 

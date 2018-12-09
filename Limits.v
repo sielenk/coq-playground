@@ -80,3 +80,29 @@ Polymorphic Definition lim{D A: Cat}{F: Fun D A}(Y: Cone F)
     |}
   |}.
 Defined.
+
+
+Polymorphic Lemma lim_equalizer{A: Cat}{X Y: A}{f g: Hom X Y}
+  (L: Lim (equalizerFun f g)):
+  let e := cone_Hom L equalizer_X: Hom (cone_Ob L) X in
+    eq_h (comp f e) (comp g e).
+Proof.
+  intro e.
+  transitivity (cone_Hom L equalizer_Y).
+  apply (cone_prop L equalizer_f).
+  symmetry.
+  apply (cone_prop L equalizer_g).
+Qed.
+
+Polymorphic Lemma lim_pullback{A: Cat}{Xf Xg Y: A}{f: Hom Xf Y}{g: Hom Xg Y}
+  (L: Lim (pullbackFun f g)):
+  let f' := cone_Hom L pullback_Xg: Hom (cone_Ob L) Xg in
+  let g' := cone_Hom L pullback_Xf: Hom (cone_Ob L) Xf in
+    eq_h (comp f g') (comp g f').
+Proof.
+  intros f' g'.
+  transitivity (cone_Hom L pullback_Y).
+  apply (cone_prop L pullback_f).
+  symmetry.
+  apply (cone_prop L pullback_g).
+Qed.

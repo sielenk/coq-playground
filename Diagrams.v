@@ -276,28 +276,44 @@ Definition pullback_Y:    pullback                    := None.
 Definition pullback_f:    Hom pullback_Xf pullback_Y  := tt.
 Definition pullback_g:    Hom pullback_Xg pullback_Y  := tt.
 
+Polymorphic Definition pullback_ob_rect
+    (P: pullback -> Type)
+    (Pxf: P pullback_Xf)
+    (Pxg: P pullback_Xg)
+    (Py: P pullback_Y)
+    (X: pullback):
+    P X :=
+  match X with
+  | None    => Py
+  | Some X' => match X' with
+               | false => Pxf
+               | true  => Pxg
+               end
+  end.
+
+Polymorphic Definition pullback_hom_rect
+    (P: forall X Y: pullback, Hom X Y -> Type)
+    (Pf: P _ _ pullback_f)
+    (Pg: P _ _ pullback_g)
+    (Pid: forall X, P _ _ (id X)):
+    forall X Y f, P X Y f.
+  intros [[]|] [[]|] []; try apply Pid; assumption.
+Defined.
+
+
 Polymorphic Definition pullbackFunSig{A: CatSig}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
-    FunSig pullbackSig A := {|
-  fmap_o     := fun(X': pullback)=> match X' with
-                | Some false => Xf
-                | Some true  => Xg
-                | None       => Y
-                end;
-  fmap X' Y' := match X', Y' with
-                | Some false, Some false => fun _ => id Xf
-                | Some true, Some true   => fun _ => id Xg
-                | None, None             => fun _ => id Y
-                | Some false, None       => fun _ => f
-                | Some true, None        => fun _ => g
-                | _, _                   => fun f => match f with end
-                end
+    FunSig pullbackSig A :=
+  let map := pullback_ob_rect (fun _ => A) Xf Xg Y in {|
+  fmap_o := map;
+  fmap   := pullback_hom_rect (fun X Y f => Hom (map X) (map Y))
+                              f g (fun X => id (map X))
 |}.
 
 Polymorphic Lemma pullbackFunAx{A: Cat}{Xf Xg Y: A}(f: Hom Xf Y)(g: Hom Xg Y):
     FunAx (pullbackFunSig f g).
 Proof.
   split.
-  intros [[|]|] [[|]|]; simpl; intros [] u' H; reflexivity.
+  intros [[|]|] [[|]|]; simpl; intros [] [] H; reflexivity.
   intros [[|]|]; simpl; reflexivity.
   intros [[|]|] [[|]|] [[|]|]; simpl; intros [] []; symmetry;
     try apply (ident_r A); apply (ident_l A).

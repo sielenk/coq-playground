@@ -50,7 +50,7 @@ Polymorphic Definition two_ob_rect
     (P: two -> Type)
     (Px: P two_X)
     (Py: P two_Y)
-    (X: two):
+    X:
     P X :=
   match X return P X with false => Px | true => Py end.
 
@@ -58,7 +58,7 @@ Polymorphic Definition two_hom_rect
     (P: forall X Y: two, Hom X Y -> Type)
     (Pf: P _ _ two_f)
     (Pid: forall X, P _ _ (id X)):
-    forall (X Y: two)(f: Hom X Y), P X Y f.
+    forall X Y f, P X Y f.
   intros [] [] []; try apply Pid.
   apply Pf.
 Defined.
@@ -156,7 +156,7 @@ Polymorphic Definition equalizer_ob_rect
     (P: equalizer -> Type)
     (Px: P equalizer_X)
     (Py: P equalizer_Y)
-    (X: equalizer):
+    X:
     P X :=
   if X return P X then Py else Px.
 
@@ -165,7 +165,7 @@ Polymorphic Definition equalizer_hom_rect
     (Pf: P _ _ equalizer_f)
     (Pg: P _ _ equalizer_g)
     (Pid: forall X, P _ _ (id X)):
-    forall (X Y: equalizer)(f: Hom X Y), P X Y f.
+    forall X Y f, P X Y f.
   intros [|] [|] []; try apply Pid.
   apply Pg.
   apply Pf.

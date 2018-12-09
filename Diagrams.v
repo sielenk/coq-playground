@@ -69,35 +69,41 @@ Definition two: Cat := {|
   catAx := twoAx
 |}.
 
-Definition two_X:   two             := twoX_.
-Definition two_Y:   two             := twoY_.
-Definition two_idX: Hom two_X two_X := twoIdX_.
-Definition two_idY: Hom two_Y two_Y := twoIdY_.
-Definition two_f:   Hom two_X two_Y := twoF_.
+Definition two_X: two             := twoX_.
+Definition two_Y: two             := twoY_.
+Definition two_f: Hom two_X two_Y := twoF_.
 
-Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A := {|
-  fmap_o(X': two) := match X' with
-                     | twoX_ => X
-                     | twoY_ => Y
-                     end;
-  fmap X' Y'      := match X', Y' with
-                     | twoX_, twoX_ => fun _ => id X
-                     | twoX_, twoY_ => fun _ => f
-                     | twoY_, twoY_ => fun _ => id Y
-                     | twoY_, twoX_ => fun f => match no_twoYX f with end
-                     end
-|}.
+Polymorphic Definition two_ob_rect
+    (P: two -> Type)
+    (Px: P two_X)
+    (Py: P two_Y)
+    (X: two):
+    P X :=
+  match X return P X with twoX_ => Px | twoY_ => Py end.
+
+Polymorphic Definition two_hom_rect
+    (P: forall X Y: two, Hom X Y -> Type)
+    (Pf: P _ _ two_f)
+    (Pid: forall X, P _ _ (id X)):
+    forall (X Y: two)(f: Hom X Y), P X Y f.
+  intros _ _ []; try apply Pid.
+  apply Pf.
+Defined.
+
+Polymorphic Definition twoFunSig{A: CatSig}{X Y: A}(f: Hom X Y): FunSig two A :=
+  let map := two_ob_rect (fun _ => A) X Y in {|
+    fmap_o := map;
+    fmap   := two_hom_rect (fun X Y f => Hom (map X) (map Y))
+                           f (fun X => id (map X))
+  |}.
 
 Polymorphic Lemma twoFunAx{A: Cat}{X Y: A}(f: Hom X Y): FunAx (twoFunSig f).
 Proof.
   split.
   intros X' Y' g1 g2 []. reflexivity.
   intros []; reflexivity.
-  intros [] Y' Z' [] f'.
-  symmetry. apply (ident_r A).
-  symmetry. apply (ident_l A).
-  symmetry. apply (ident_r A).
-  destruct (no_twoYX f').
+  intros [] Y' Z' [] f'; try (symmetry; apply (ident_l A)).
+  rewrite (two_thin f' (id two_X)).
   symmetry. apply (ident_r A).
   destruct (no_twoYX f').
 Qed.
@@ -172,20 +178,35 @@ Definition equalizer: Cat := {|
 
 Definition equalizer_X:   equalizer                   := false.
 Definition equalizer_Y:   equalizer                   := true.
-Definition equalizer_idX: Hom equalizer_X equalizer_X := tt.
-Definition equalizer_idY: Hom equalizer_Y equalizer_Y := tt.
 Definition equalizer_f:   Hom equalizer_X equalizer_Y := false.
 Definition equalizer_g:   Hom equalizer_X equalizer_Y := true.
 
+Polymorphic Definition equalizer_ob_rect
+    (P: equalizer -> Type)
+    (Px: P equalizer_X)
+    (Py: P equalizer_Y)
+    (X: equalizer):
+    P X :=
+  if X return P X then Py else Px.
+
+Polymorphic Definition equalizer_hom_rect
+    (P: forall X Y: equalizer, Hom X Y -> Type)
+    (Pf: P _ _ equalizer_f)
+    (Pg: P _ _ equalizer_g)
+    (Pid: forall X, P _ _ (id X)):
+    forall (X Y: equalizer)(f: Hom X Y), P X Y f.
+  intros [|] [|] []; try apply Pid.
+  apply Pg.
+  apply Pf.
+Defined.
+
 Polymorphic Definition equalizerFunSig{A: CatSig}{X Y: A}(f g: Hom X Y):
-    FunSig equalizerSig A := {|
-  fmap_o     := fun(X': equalizer) => if X' then Y else X;
-  fmap X' Y' := match X', Y' with
-                | false, false => fun _ => id X
-                | true, true   => fun _ => id Y
-                | false, true  => fun f' => if f' then g else f
-                | true, false  => fun f' => match f' with end
-                end
+    FunSig equalizerSig A :=
+  let map := equalizer_ob_rect (fun _ => A) X Y in {|
+    fmap_o := map;
+    fmap   := equalizer_hom_rect
+                (fun X Y _ => Hom (map X) (map Y))
+                f g (fun X => id (map X))
 |}.
 
 Polymorphic Lemma equalizerFunAx{A: Cat}{X Y: A}(f g: Hom X Y):
@@ -195,13 +216,17 @@ Proof.
   intros X' Y' h h' []. reflexivity.
   intros [|]; reflexivity.
   intros [|] [|] [|] g' f'; simpl.
+  destruct g', f'.
   symmetry. apply (ident_r A).
   destruct g'.
   destruct f'.
   destruct f'.
+  destruct g'.
   symmetry. apply (ident_l A).
   destruct g'.
+  destruct f'.
   symmetry. apply (ident_r A).
+  destruct g', f'.
   symmetry. apply (ident_r A).
 Qed.
 
@@ -277,9 +302,6 @@ Definition pullback: Cat := {|
 Definition pullback_Xf:   pullback                    := Some false.
 Definition pullback_Xg:   pullback                    := Some true.
 Definition pullback_Y:    pullback                    := None.
-Definition pullback_idXf: Hom pullback_Xf pullback_Xf := tt.
-Definition pullback_idXg: Hom pullback_Xg pullback_Xg := tt.
-Definition pullback_idY:  Hom pullback_Y  pullback_Y  := tt.
 Definition pullback_f:    Hom pullback_Xf pullback_Y  := tt.
 Definition pullback_g:    Hom pullback_Xg pullback_Y  := tt.
 

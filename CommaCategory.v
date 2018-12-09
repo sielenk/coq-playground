@@ -160,14 +160,15 @@ Section comma_category.
     intros X Y [f1 f2 Hf].
     set (g1 := commaOb_f X)in Hf |- *.
     set (g2 := commaOb_f Y)in Hf |- *.
-    refine {|
-      natTrans(X': Ob two) :=
-        if X' return Hom (twoFun g1 X') (twoFun g2 X')
-          then fmap S f1
-          else fmap T f2
+    refine {| natTrans := two_ob_rect
+                            (fun X' => Hom (twoFun g1 X') (twoFun g2 X'))
+                            (fmap S f1)
+                            (fmap T f2)
     |}.
-    intros [|] [|];
-    intro f; try destruct (no_twoYX f); try assumption.
+    unfold natural.
+    apply two_hom_rect.
+    apply Hf.
+    apply two_ob_rect.
     transitivity (fmap S f1).
     apply (ident_l C).
     symmetry. apply (ident_r C).
